@@ -1,0 +1,5 @@
+{
+  "name": "NeonStitch Streetwear",
+  "description": "A high-end, production-ready clothing brand web application with integrated Firebase authentication, Firestore database, and a comprehensive admin management system featuring a sleek dark-mode neon aesthetic.",
+  "requestFramePermissions": []
+}
