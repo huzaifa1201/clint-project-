@@ -16,12 +16,14 @@ export interface UserProfile {
   addresses?: Address[];
   wishlist?: string[]; // Array of product IDs
   createdAt?: any;
+  isBlocked?: boolean;
 }
 
 // Added Category interface
 export interface Category {
   id: string;
   name: string;
+  price?: number; // Optional as it might not be relevant for a pure category object depending on usage
 }
 
 export interface Product {
@@ -34,6 +36,7 @@ export interface Product {
   stock: number;
   imageUrls: string[];
   tags?: string[];
+  isPublished?: boolean;
 }
 
 export interface Review {
@@ -62,6 +65,7 @@ export interface Order {
   paymentStatus: 'Paid' | 'Pending' | 'Failed';
   createdAt: any;
   shippingAddress: string;
+  phoneNumber?: string; // Added phone number
 }
 
 export interface Banner {

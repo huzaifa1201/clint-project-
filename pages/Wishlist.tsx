@@ -40,7 +40,7 @@ const Wishlist: React.FC = () => {
   if (wishlist.length === 0) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 space-y-6">
-        <div className="p-6 bg-zinc-900 rounded-full text-zinc-700"><Heart size={64} /></div>
+        <div className="p-6 bg-zinc-100 dark:bg-zinc-900 rounded-full text-zinc-400 dark:text-zinc-700"><Heart size={64} /></div>
         <h1 className="text-4xl font-black italic tracking-tighter uppercase">Wishlist Empty</h1>
         <p className="text-zinc-500 max-w-sm">You haven't archived any pieces yet. Explore the drops to save your favorites.</p>
         <Link to="/products" className="bg-green-500 text-black px-8 py-4 rounded-xl font-black uppercase tracking-widest hover:bg-green-400 flex items-center gap-2">
@@ -55,13 +55,13 @@ const Wishlist: React.FC = () => {
       <h1 className="text-5xl font-black italic tracking-tighter uppercase mb-12">Personal Archive</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {products.map(product => (
-          <div key={product.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden group hover:border-green-500 transition-all">
+          <div key={product.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden group hover:border-green-500 transition-all">
             <Link to={`/products/${product.id}`} className="block relative aspect-[3/4] overflow-hidden">
               <img src={product.imageUrls[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
               <div className="absolute top-4 right-4">
                 <button
                   onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
-                  className="p-3 bg-zinc-950/80 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                  className="p-3 bg-white/80 dark:bg-zinc-950/80 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -70,7 +70,7 @@ const Wishlist: React.FC = () => {
             <div className="p-6">
               <h3 className="font-bold text-lg uppercase tracking-tight truncate">{product.name}</h3>
               <p className="text-green-500 font-mono font-bold mt-1">${product.price.toFixed(2)}</p>
-              <Link to={`/products/${product.id}`} className="w-full mt-4 bg-zinc-950 border border-zinc-800 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-green-500 hover:border-green-500 flex items-center justify-center gap-2 transition-all">
+              <Link to={`/products/${product.id}`} className="w-full mt-4 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-3 text-[10px] font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400 hover:text-green-500 hover:border-green-500 flex items-center justify-center gap-2 transition-all">
                 <ShoppingBag size={14} /> VIEW DETAILS
               </Link>
             </div>

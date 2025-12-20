@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Mail, Lock, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -30,7 +31,8 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-20">
-      <div className="grid grid-cols-1 md:grid-cols-2 max-w-5xl w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800">
+      <SEO title="Login" description="Sign in to your NeonStitch account." />
+      <div className="grid grid-cols-1 md:grid-cols-2 max-w-5xl w-full bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800">
         <div className="hidden md:block relative overflow-hidden">
           <img src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="Vibe" />
           <div className="absolute inset-0 bg-green-500/20 mix-blend-overlay"></div>
@@ -42,20 +44,20 @@ const Login: React.FC = () => {
         <div className="p-8 md:p-16 flex flex-col justify-center">
           <div className="mb-10 text-center md:text-left">
             <h1 className="text-4xl font-black italic uppercase tracking-tighter">Welcome Back</h1>
-            <p className="text-zinc-500 font-medium">Log in to manage your orders and profile.</p>
+            <p className="text-zinc-600 dark:text-zinc-500 font-medium">Log in to manage your orders and profile.</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-6 text-left">
             {error && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm">{error}</div>}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Email Address</label>
+              <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-green-500 transition-colors" placeholder="name@example.com" required />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-green-500 transition-colors text-black dark:text-white" placeholder="name@example.com" required />
               </div>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Password</label>
+                <label className="text-sm font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Password</label>
                 <button type="button" onClick={async () => {
                   if (!email) { setError('Enter your email first to reset password.'); return; }
                   setLoading(true);
@@ -71,7 +73,7 @@ const Login: React.FC = () => {
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-green-500 transition-colors" placeholder="••••••••" required />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-4 pl-12 pr-4 outline-none focus:border-green-500 transition-colors text-black dark:text-white" placeholder="••••••••" required />
               </div>
             </div>
             <button type="submit" disabled={loading} className="w-full bg-green-500 text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-400 disabled:opacity-50 transition-all uppercase tracking-widest">

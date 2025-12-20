@@ -2,6 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import App from './App.tsx';
 import './index.css';
 
@@ -13,8 +14,10 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <HashRouter>
-      <App />
-    </HashRouter>
+    <HelmetProvider>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </HelmetProvider>
   </React.StrictMode>
 );

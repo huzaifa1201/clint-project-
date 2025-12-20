@@ -5,6 +5,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Mail, Lock, User as UserIcon, Loader2, AlertCircle } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Signup: React.FC = () => {
   const [name, setName] = useState('');
@@ -45,7 +46,8 @@ const Signup: React.FC = () => {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-20">
-      <div className="grid grid-cols-1 md:grid-cols-2 max-w-5xl w-full bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-800">
+      <SEO title="Create Account" description="Join the NeonStitch collective." />
+      <div className="grid grid-cols-1 md:grid-cols-2 max-w-5xl w-full bg-white dark:bg-zinc-900 rounded-3xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800">
         <div className="hidden md:block relative overflow-hidden">
           <img src="https://images.unsplash.com/photo-1506152983158-b4a74a01c721?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" alt="Sign Up Vibe" />
           <div className="absolute inset-0 bg-green-500/20 mix-blend-overlay"></div>
@@ -57,15 +59,15 @@ const Signup: React.FC = () => {
         <div className="p-8 md:p-16 flex flex-col justify-center">
           <div className="mb-10 text-center md:text-left">
             <h1 className="text-4xl font-black italic uppercase tracking-tighter">Create Account</h1>
-            <p className="text-zinc-500 font-medium">Enter your details to get started.</p>
+            <p className="text-zinc-600 dark:text-zinc-500 font-medium">Enter your details to get started.</p>
           </div>
           <form onSubmit={handleSignup} className="space-y-4 text-left">
             {error && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl text-sm flex gap-3"><AlertCircle size={18} /><span>{error}</span></div>}
             <div className="space-y-1">
-              <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Full Name</label>
+              <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Full Name</label>
               <div className="relative">
                 <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl py-3.5 pl-12 pr-4 outline-none focus:border-green-500 transition-colors" placeholder="John Doe" required />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl py-3.5 pl-12 pr-4 outline-none focus:border-green-500 transition-colors text-black dark:text-white" placeholder="John Doe" required />
               </div>
             </div>
             <div className="space-y-1">

@@ -155,7 +155,7 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
       <Link to="/cart" className="inline-flex items-center gap-2 text-zinc-500 hover:text-green-500 mb-8 font-bold text-sm uppercase tracking-widest transition-colors"><ArrowLeft size={18} /> Back to Bag</Link>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
         <div className="space-y-12 text-left">
-          <h1 className="text-6xl font-black italic tracking-tighter uppercase leading-none text-left">Checkout <span className="text-green-500">Ops.</span></h1>
+          <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none text-left">Checkout <span className="text-green-500">Ops.</span></h1>
           <form onSubmit={handlePlaceOrder} className="space-y-10">
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-[10px]"><MapPin size={18} /> 01 / Shipping Logistics</div>
@@ -169,20 +169,20 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
               {profile?.addresses && profile.addresses.length > 0 && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                   {profile.addresses.map(addr => (
-                    <button key={addr.id} type="button" onClick={() => selectSavedAddress(addr.fullAddress)} className={`text-left p-4 rounded-2xl border transition-all ${address === addr.fullAddress ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}><span className="block font-black text-[10px] uppercase tracking-widest mb-1">{addr.label}</span><p className="text-xs truncate">{addr.fullAddress}</p></button>
+                    <button key={addr.id} type="button" onClick={() => selectSavedAddress(addr.fullAddress)} className={`text-left p-4 rounded-2xl border transition-all ${address === addr.fullAddress ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-300 dark:hover:border-zinc-700'}`}><span className="block font-black text-[10px] uppercase tracking-widest mb-1">{addr.label}</span><p className="text-xs truncate text-black dark:text-white">{addr.fullAddress}</p></button>
                   ))}
                 </div>
               )}
-              <textarea required value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Coordinates / Full Deployment Address..." className="w-full bg-zinc-950 border border-zinc-800 rounded-3xl p-6 min-h-[120px] outline-none focus:border-green-500 transition-colors text-white" />
+              <textarea required value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Coordinates / Full Deployment Address..." className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 min-h-[120px] outline-none focus:border-green-500 transition-colors text-black dark:text-white" />
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-zinc-500 tracking-[0.2em] ml-4 flex items-center gap-1">Contact Protocol {paymentMethod === 'COD' && <span className="text-red-500">*</span>}</label>
+                <label className="text-[10px] font-black uppercase text-zinc-600 dark:text-zinc-500 tracking-[0.2em] ml-4 flex items-center gap-1">Contact Protocol {paymentMethod === 'COD' && <span className="text-red-500">*</span>}</label>
                 <input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="Mobile Number (Required for Logistics)"
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-4 outline-none focus:border-green-500 transition-colors text-white font-mono"
+                  className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 outline-none focus:border-green-500 transition-colors text-black dark:text-white font-mono"
                 />
               </div>
             </section>
@@ -199,10 +199,10 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
 
               <div className="grid grid-cols-2 gap-4">
                 {isStripeEnabled && (
-                  <button type="button" onClick={() => setPaymentMethod('Card')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'Card' ? 'bg-white text-black border-white' : 'bg-zinc-900 text-zinc-500 border-zinc-800'}`}><CreditCard size={20} /> Credit Card</button>
+                  <button type="button" onClick={() => setPaymentMethod('Card')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'Card' ? 'bg-white text-black border-white' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><CreditCard size={20} /> Credit Card</button>
                 )}
                 {isCODEnabled && (
-                  <button type="button" onClick={() => setPaymentMethod('COD')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'COD' ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-zinc-900 text-zinc-500 border-zinc-800'}`}><Truck size={20} /> Cash on Delivery</button>
+                  <button type="button" onClick={() => setPaymentMethod('COD')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'COD' ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><Truck size={20} /> Cash on Delivery</button>
                 )}
               </div>
 
@@ -213,12 +213,12 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
                   {/* STRIPE ELEMENTS UI */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase text-green-500 tracking-widest mb-2"><Lock size={12} /> Secure 256-bit Stripe Encryption</div>
-                    <div className="p-4 bg-zinc-950 border border-zinc-700 rounded-xl">
+                    <div className="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-xl">
                       <CardElement options={{
                         style: {
                           base: {
                             fontSize: '16px',
-                            color: '#ffffff',
+                            color: '#000000',
                             fontFamily: 'monospace',
                             '::placeholder': { color: '#52525b' },
                           },
@@ -243,22 +243,22 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
           </form>
         </div>
         <div className="lg:col-span-1">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-[40px] p-10 sticky top-28 shadow-2xl text-left">
-            <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-8 border-b border-zinc-800 pb-6 text-left">Manifest Summary</h3>
+          <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-10 sticky top-28 shadow-2xl text-left">
+            <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-6 text-left">Manifest Summary</h3>
             <div className="space-y-6 max-h-[350px] overflow-y-auto pr-4 mb-10 text-left">
               {cart.map((item, idx) => (
                 <div key={idx} className="flex gap-6 group">
-                  <div className="w-20 h-24 bg-zinc-800 rounded-2xl overflow-hidden shrink-0 border border-zinc-700 group-hover:border-green-500 transition-colors"><img src={item.imageUrls[0]} alt="" className="w-full h-full object-cover" /></div>
+                  <div className="w-20 h-24 bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 group-hover:border-green-500 transition-colors"><img src={item.imageUrls[0]} alt="" className="w-full h-full object-cover" /></div>
                   <div className="flex-grow space-y-1">
-                    <p className="font-black text-sm uppercase tracking-tight leading-none truncate w-40 text-left">{item.name}</p>
+                    <p className="font-black text-sm uppercase tracking-tight leading-none truncate w-40 text-left text-black dark:text-white">{item.name}</p>
                     <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest text-left">Size: {item.selectedSize} / Qty: {item.quantity}</p>
                     <p className="text-green-500 font-mono font-bold text-lg text-left">${(item.price * item.quantity).toFixed(2)}</p>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="space-y-4 pt-6 border-t border-zinc-800">
-              <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Subtotal</span><span className="text-white font-mono text-left">${cartTotal.toFixed(2)}</span></div>
+            <div className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
+              <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Subtotal</span><span className="text-black dark:text-white font-mono text-left">${cartTotal.toFixed(2)}</span></div>
               <div className="flex justify-between items-center pt-4"><span className="font-black italic uppercase text-xl text-left">Grand Total</span><span className="text-3xl font-mono font-bold text-green-500 text-left">${cartTotal.toFixed(2)}</span></div>
             </div>
           </div>
@@ -320,7 +320,7 @@ const Checkout: React.FC = () => {
     fetchConfig();
   }, []);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950"><Loader2 className="animate-spin text-green-500" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950"><Loader2 className="animate-spin text-green-500" /></div>;
 
   if (stripeKey && enableStripe) {
     return <StripeWrapper stripeKey={stripeKey} enableCOD={enableCOD} enableStripe={true} />;

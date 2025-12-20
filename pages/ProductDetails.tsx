@@ -8,6 +8,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, ChevronLeft, Star, Heart, CheckCircle2, Loader2, MessageSquare, Trash2 } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams();
@@ -107,17 +108,26 @@ const ProductDetails: React.FC = () => {
     <Link to="/products" className="text-green-500 underline font-black">RETURN TO BASE</Link>
   </div>;
 
+
+
+  // ... inside ProductDetails component return
   const inWishlist = isInWishlist(product.id);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 text-left">
+      <SEO
+        title={product.name}
+        description={product.description}
+        image={product.imageUrls[0]}
+        keywords={`${product.name}, ${product.category}, neonstitch, streetwear`}
+      />
       <Link to="/products" className="inline-flex items-center gap-2 text-zinc-500 hover:text-green-500 transition-colors mb-8 font-bold text-sm uppercase tracking-widest">
         <ChevronLeft size={20} /> Back to shop
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24">
         <div className="space-y-4">
-          <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 relative shadow-2xl">
+          <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 relative shadow-2xl">
             <img
               src={product.imageUrls[activeImage] || 'https://picsum.photos/800/1000'}
               className={`w-full h-full object-cover ${product.stock === 0 ? 'grayscale opacity-50' : ''}`}
@@ -131,7 +141,7 @@ const ProductDetails: React.FC = () => {
           </div>
           <div className="grid grid-cols-4 gap-4">
             {product.imageUrls.map((url, idx) => (
-              <button key={idx} onClick={() => setActiveImage(idx)} className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-zinc-800'}`}>
+              <button key={idx} onClick={() => setActiveImage(idx)} className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-zinc-200 dark:border-zinc-800'}`}>
                 <img src={url} className="w-full h-full object-cover" alt="" />
               </button>
             ))}
@@ -143,15 +153,15 @@ const ProductDetails: React.FC = () => {
             <div className="flex items-center gap-4">
               <span className="text-[10px] font-black tracking-widest text-green-500 uppercase px-2 py-1 bg-green-500/10 rounded border border-green-500/20">{product.category}</span>
               {averageRating && (
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900 border border-zinc-800 rounded text-xs font-black">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-xs font-black">
                   <Star size={12} className="text-green-500" fill="#22c55e" />
-                  <span className="text-white">{averageRating}</span>
+                  <span className="text-black dark:text-white">{averageRating}</span>
                   <span className="text-zinc-600">({reviews.length})</span>
                 </div>
               )}
             </div>
-            <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">{product.name}</h1>
-            <p className="text-4xl font-mono font-bold text-green-500">${product.price.toFixed(2)}</p>
+            <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">{product.name}</h1>
+            <p className="text-2xl md:text-4xl font-mono font-bold text-green-500">${product.price.toFixed(2)}</p>
           </div>
 
           <p className="text-zinc-400 leading-relaxed italic border-l-2 border-green-500/50 pl-6 text-lg">"{product.description}"</p>
@@ -161,7 +171,7 @@ const ProductDetails: React.FC = () => {
               <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Select Size</span>
               <div className="flex flex-wrap gap-3">
                 {product.sizes.map(size => (
-                  <button key={size} onClick={() => setSelectedSize(size)} className={`w-14 h-12 flex items-center justify-center rounded-xl border-2 font-black transition-all ${selectedSize === size ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-transparent text-zinc-500 border-zinc-800 hover:border-zinc-600'}`}>
+                  <button key={size} onClick={() => setSelectedSize(size)} className={`w-14 h-12 flex items-center justify-center rounded-xl border-2 font-black transition-all ${selectedSize === size ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-zinc-600'}`}>
                     {size}
                   </button>
                 ))}
@@ -178,7 +188,7 @@ const ProductDetails: React.FC = () => {
               </button>
               <button
                 onClick={() => toggleWishlist(product.id)}
-                className={`w-16 h-16 border rounded-2xl flex items-center justify-center transition-all ${inWishlist ? 'bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-red-500'}`}
+                className={`w-16 h-16 border rounded-2xl flex items-center justify-center transition-all ${inWishlist ? 'bg-red-500 border-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-red-500'}`}
               >
                 <Heart size={24} fill={inWishlist ? "currentColor" : "none"} />
               </button>
@@ -188,22 +198,22 @@ const ProductDetails: React.FC = () => {
       </div>
 
       {/* Review Section */}
-      <section className="border-t border-zinc-900 pt-24 pb-12">
+      <section className="border-t border-zinc-200 dark:border-zinc-900 pt-24 pb-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div className="text-left">
             <h2 className="text-4xl font-black italic tracking-tighter uppercase mb-2">Field Reports</h2>
             <p className="text-zinc-500 font-medium">Citizen feedback on asset performance.</p>
           </div>
           {averageRating && (
-            <div className="p-6 bg-zinc-900 border border-zinc-800 rounded-[32px] flex items-center gap-6 shadow-xl">
+            <div className="p-6 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] flex items-center gap-6 shadow-xl">
               <div className="text-center">
-                <p className="text-4xl font-black text-white leading-none">{averageRating}</p>
+                <p className="text-4xl font-black text-black dark:text-white leading-none">{averageRating}</p>
                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mt-2">Overall Score</p>
               </div>
-              <div className="h-12 w-[1px] bg-zinc-800"></div>
+              <div className="h-12 w-[1px] bg-zinc-200 dark:bg-zinc-800"></div>
               <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map(i => (
-                  <Star key={i} size={20} fill={i <= Math.round(Number(averageRating)) ? "#22c55e" : "none"} className={i <= Math.round(Number(averageRating)) ? "text-green-500" : "text-zinc-800"} />
+                  <Star key={i} size={20} fill={i <= Math.round(Number(averageRating)) ? "#22c55e" : "none"} className={i <= Math.round(Number(averageRating)) ? "text-green-500" : "text-zinc-300 dark:text-zinc-800"} />
                 ))}
               </div>
             </div>
@@ -213,13 +223,13 @@ const ProductDetails: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
           <div className="lg:col-span-1">
             {user ? (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-[40px] p-8 shadow-2xl sticky top-28">
+              <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-8 shadow-2xl sticky top-28">
                 <h3 className="text-xl font-black italic uppercase tracking-tighter mb-6 flex items-center gap-2">
                   <MessageSquare size={20} className="text-green-500" /> New Transmission
                 </h3>
                 <form onSubmit={handleReviewSubmit} className="space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Performance Rating</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 dark:text-zinc-500">Performance Rating</label>
                     <div className="flex gap-2">
                       {[1, 2, 3, 4, 5].map(i => (
                         <button
@@ -228,19 +238,19 @@ const ProductDetails: React.FC = () => {
                           onClick={() => setRating(i)}
                           className="hover:scale-110 transition-transform"
                         >
-                          <Star size={24} fill={i <= rating ? "#22c55e" : "none"} className={i <= rating ? "text-green-500" : "text-zinc-800"} />
+                          <Star size={24} fill={i <= rating ? "#22c55e" : "none"} className={i <= rating ? "text-green-500" : "text-zinc-300 dark:text-zinc-800"} />
                         </button>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-3 text-left">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Encrypted Comment</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Encrypted Comment</label>
                     <textarea
                       required
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="Detailed feedback on fit, fabric, and aesthetics..."
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 min-h-[120px] outline-none focus:border-green-500 text-sm italic"
+                      className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-h-[120px] outline-none focus:border-green-500 text-sm italic text-zinc-900 dark:text-white"
                     />
                   </div>
                   <button
@@ -253,7 +263,7 @@ const ProductDetails: React.FC = () => {
                 </form>
               </div>
             ) : (
-              <div className="bg-zinc-900 border border-dashed border-zinc-800 rounded-[40px] p-12 text-center space-y-4">
+              <div className="bg-zinc-100 dark:bg-zinc-900 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-[40px] p-12 text-center space-y-4">
                 <p className="text-zinc-600 font-black italic uppercase tracking-widest text-sm">Authentication Required to transmit reports.</p>
                 <Link to="/login" className="inline-block text-green-500 underline font-black uppercase text-xs">Sign In Now</Link>
               </div>
@@ -262,27 +272,27 @@ const ProductDetails: React.FC = () => {
 
           <div className="lg:col-span-2 space-y-6">
             {reviews.length === 0 ? (
-              <div className="py-24 text-center border border-dashed border-zinc-900 rounded-[40px] flex flex-col items-center gap-4">
+              <div className="py-24 text-center border border-dashed border-zinc-200 dark:border-zinc-900 rounded-[40px] flex flex-col items-center gap-4">
                 <MessageSquare size={48} className="text-zinc-900" />
                 <p className="text-zinc-700 font-bold italic uppercase tracking-widest">No reports currently in the system.</p>
               </div>
             ) : (
               reviews.map(review => (
-                <div key={review.id} className="p-8 bg-zinc-900 border border-zinc-800 rounded-[32px] hover:border-zinc-700 transition-all group shadow-xl">
+                <div key={review.id} className="p-8 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] hover:border-zinc-300 dark:hover:border-zinc-700 transition-all group shadow-xl">
                   <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-950 border border-zinc-800 rounded-xl flex items-center justify-center font-black text-green-500 italic">
+                      <div className="w-12 h-12 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center font-black text-green-500 italic">
                         {review.userName.charAt(0)}
                       </div>
                       <div className="text-left">
-                        <h4 className="font-black uppercase tracking-tight text-white">{review.userName}</h4>
+                        <h4 className="font-black uppercase tracking-tight text-black dark:text-white">{review.userName}</h4>
                         <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{review.createdAt?.toDate().toLocaleDateString() || 'Recently logged'}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex gap-0.5">
                         {[1, 2, 3, 4, 5].map(i => (
-                          <Star key={i} size={14} fill={i <= review.rating ? "#22c55e" : "none"} className={i <= review.rating ? "text-green-500" : "text-zinc-800"} />
+                          <Star key={i} size={14} fill={i <= review.rating ? "#22c55e" : "none"} className={i <= review.rating ? "text-green-500" : "text-zinc-300 dark:text-zinc-800"} />
                         ))}
                       </div>
                       {user?.uid === review.userId && (
@@ -295,7 +305,7 @@ const ProductDetails: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  <p className="text-zinc-400 italic leading-relaxed text-left border-l border-zinc-800 pl-4">"{review.comment}"</p>
+                  <p className="text-zinc-600 dark:text-zinc-400 italic leading-relaxed text-left border-l border-zinc-200 dark:border-zinc-800 pl-4">"{review.comment}"</p>
                 </div>
               ))
             )}

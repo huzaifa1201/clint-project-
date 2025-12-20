@@ -4,6 +4,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { SupportPageContent } from '../types';
 import { ChevronLeft, Info, Truck, RefreshCcw, Ruler } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const SupportPage: React.FC = () => {
   const { slug } = useParams();
@@ -49,6 +50,7 @@ const SupportPage: React.FC = () => {
 
   if (!data) return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      <SEO title="Page Not Found" />
       <h1 className="text-2xl font-black italic uppercase tracking-tighter">Page Not Found</h1>
       <Link to="/" className="text-green-500 underline mt-4 font-bold">Return Home</Link>
     </div>
@@ -56,6 +58,7 @@ const SupportPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
+      <SEO title={data.title} description={data.content.substring(0, 160)} />
       <Link to="/" className="inline-flex items-center gap-2 text-zinc-500 hover:text-green-500 transition-colors mb-12 font-bold text-xs uppercase tracking-widest">
         <ChevronLeft size={16} /> Back to Home
       </Link>
@@ -66,7 +69,7 @@ const SupportPage: React.FC = () => {
         </div>
 
         <div className="flex-grow space-y-8">
-          <h1 className="text-6xl font-black italic tracking-tighter uppercase leading-none">{data.title}</h1>
+          <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">{data.title}</h1>
           <div className="w-24 h-2 bg-green-500"></div>
 
           <div className="prose prose-invert max-w-none text-zinc-400 text-lg leading-relaxed whitespace-pre-wrap">

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Mail, Send, CheckCircle, Loader2, MapPin } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const ContactUs: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -29,6 +30,7 @@ const ContactUs: React.FC = () => {
   if (success) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-4 text-center">
+        <SEO title="Message Sent" />
         <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-black mb-6 animate-in zoom-in">
           <CheckCircle size={40} />
         </div>
@@ -41,6 +43,7 @@ const ContactUs: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
+      <SEO title="Contact Us" description="Get in touch with NeonStitch support." />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
         <div className="space-y-12">
           <div>

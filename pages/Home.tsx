@@ -5,6 +5,7 @@ import { collection, limit, getDocs, query, doc, getDoc } from 'firebase/firesto
 import { db } from '../firebase';
 import { Product, Banner } from '../types';
 import { ChevronRight, ArrowRight, Zap, Shield, Truck, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -54,7 +55,7 @@ const Home: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
         <Loader2 className="animate-spin text-green-500" size={40} />
       </div>
     );
@@ -62,15 +63,16 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-20 pb-20">
+      <SEO title="Home" />
       {/* Hero Section - Powered by Admin Banners */}
-      <section className="relative h-[85vh] w-full overflow-hidden flex items-center">
-        <div className="absolute inset-0 bg-zinc-950">
+      <section className="relative h-[85vh] w-full overflow-hidden flex items-center bg-zinc-100 dark:bg-zinc-950">
+        <div className="absolute inset-0 bg-white dark:bg-zinc-950">
           <img
             src={activeBanner.imageUrl}
             className="w-full h-full object-cover opacity-60 transition-opacity duration-1000"
             alt="Brand Hero"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-zinc-950 via-zinc-950/60 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent dark:from-zinc-950 dark:via-zinc-950/60 dark:to-transparent"></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-left">
@@ -78,10 +80,10 @@ const Home: React.FC = () => {
             <span className="inline-block px-3 py-1 bg-green-500/10 text-green-500 border border-green-500/20 rounded-full text-xs font-bold tracking-widest uppercase">
               LIVE COLLECTION
             </span>
-            <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter leading-tight uppercase animate-in slide-in-from-left-8 duration-700">
+            <h1 className="text-4xl md:text-6xl lg:text-8xl font-black italic tracking-tighter leading-tight uppercase animate-in slide-in-from-left-8 duration-700">
               {activeBanner.title}
             </h1>
-            <p className="text-zinc-400 text-lg md:text-xl max-w-lg italic">
+            <p className="text-zinc-600 dark:text-zinc-400 text-lg md:text-xl max-w-lg italic">
               High-performance fabrics meeting cutting-edge urban aesthetics. Built for the neon-lit concrete jungle.
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
@@ -100,7 +102,7 @@ const Home: React.FC = () => {
       {promoAds.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 space-y-8">
           {promoAds.map((ad, idx) => (
-            <a key={idx} href={ad.linkUrl || '#'} className="block relative w-full aspect-[21/9] md:aspect-[32/9] rounded-[32px] overflow-hidden group border border-zinc-800 hover:border-green-500/50 transition-all shadow-2xl">
+            <a key={idx} href={ad.linkUrl || '#'} className="block relative w-full aspect-[21/9] md:aspect-[32/9] rounded-[32px] overflow-hidden group border border-zinc-200 dark:border-zinc-800 hover:border-green-500/50 transition-all shadow-2xl">
               <img src={ad.imageUrl} alt="Promo" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </a>
@@ -115,7 +117,7 @@ const Home: React.FC = () => {
           { icon: Shield, title: 'SECURE PAYMENT', desc: '100% encrypted checkout process.' },
           { icon: Zap, title: 'PREMIUM QUALITY', desc: 'Curated fabrics & high-end stitching.' }
         ].map((f, i) => (
-          <div key={i} className="flex items-center gap-4 p-8 bg-zinc-900/50 border border-zinc-800 rounded-3xl group hover:border-green-500/50 transition-all text-left">
+          <div key={i} className="flex items-center gap-4 p-8 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-3xl group hover:border-green-500/50 transition-all text-left">
             <div className="p-4 bg-green-500/10 text-green-500 rounded-2xl group-hover:scale-110 transition-all"><f.icon size={28} /></div>
             <div>
               <h3 className="font-black uppercase tracking-tighter text-lg">{f.title}</h3>
@@ -129,7 +131,7 @@ const Home: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-end mb-16">
           <div className="text-left">
-            <h2 className="text-5xl font-black tracking-tighter italic uppercase leading-none">New Drops</h2>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tighter italic uppercase leading-none">New Drops</h2>
             <div className="w-24 h-2 bg-green-500 mt-4"></div>
           </div>
           <Link to="/products" className="text-green-500 font-black hover:underline flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
@@ -140,13 +142,13 @@ const Home: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {featuredProducts.map(product => (
             <Link key={product.id} to={`/products/${product.id}`} className="group space-y-6 text-left">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[32px] bg-zinc-900 border border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-[32px] bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
                 <img
                   src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 {product.stock === 0 && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <span className="bg-red-500 text-white font-black px-6 py-2 rounded-full text-[10px] tracking-widest uppercase -rotate-12">OUT OF STOCK</span>
@@ -154,7 +156,7 @@ const Home: React.FC = () => {
                 )}
               </div>
               <div>
-                <h3 className="font-black text-xl text-zinc-200 group-hover:text-green-500 transition-colors uppercase tracking-tight">{product.name}</h3>
+                <h3 className="font-black text-xl text-zinc-800 dark:text-zinc-200 group-hover:text-green-500 transition-colors uppercase tracking-tight">{product.name}</h3>
                 <p className="text-green-500 font-mono font-bold text-lg mt-1">${product.price.toFixed(2)}</p>
               </div>
             </Link>

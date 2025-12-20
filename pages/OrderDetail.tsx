@@ -5,7 +5,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Order } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { ChevronLeft, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, Wallet, ShoppingBag, ShieldAlert, XCircle, AlertTriangle, ExternalLink, X, Activity, Globe } from 'lucide-react';
+import { ChevronLeft, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, Wallet, ShoppingBag, ShieldAlert, XCircle, AlertTriangle, ExternalLink, X, Activity, Globe, Phone } from 'lucide-react';
 
 const OrderDetail: React.FC = () => {
    const { id } = useParams();
@@ -80,7 +80,7 @@ const OrderDetail: React.FC = () => {
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
             <div className="lg:col-span-2 space-y-12">
-               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-zinc-900 pb-12">
+               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-zinc-200 dark:border-zinc-900 pb-12">
                   <div className="text-left">
                      <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-2">Operational Identifier</p>
                      <h1 className="text-5xl font-black italic uppercase tracking-tighter leading-none">#{order.id.toUpperCase()}</h1>
@@ -90,7 +90,7 @@ const OrderDetail: React.FC = () => {
                      {getStatusIcon(order.status)}
                      <div className="text-left">
                         <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Phase</p>
-                        <p className={`font-black uppercase text-xl ${order.status === 'Cancelled' ? 'text-red-500' : 'text-white'}`}>{order.status}</p>
+                        <p className={`font-black uppercase text-xl ${order.status === 'Cancelled' ? 'text-red-500' : 'text-black dark:text-white'}`}>{order.status}</p>
                      </div>
                   </div>
                </div>
@@ -145,7 +145,7 @@ const OrderDetail: React.FC = () => {
                               key={s}
                               disabled={updating || order.status === s}
                               onClick={() => handleStatusUpdate(s)}
-                              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${order.status === s ? 'bg-green-500 border-green-500 text-black' : 'bg-zinc-950 border-zinc-800 text-zinc-500 hover:text-white hover:border-zinc-500 disabled:opacity-50'}`}
+                              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${order.status === s ? 'bg-green-500 border-green-500 text-black' : 'bg-zinc-100 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-black dark:hover:text-white hover:border-zinc-500 disabled:opacity-50'}`}
                            >
                               {s}
                            </button>
@@ -160,8 +160,8 @@ const OrderDetail: React.FC = () => {
                   </h3>
                   <div className="space-y-6">
                      {order.items.map((item, idx) => (
-                        <div key={idx} className="flex gap-8 p-8 bg-zinc-900 border border-zinc-800 rounded-[32px] hover:border-zinc-700 transition-all">
-                           <div className="w-28 h-36 rounded-2xl overflow-hidden shrink-0 bg-zinc-950 shadow-2xl">
+                        <div key={idx} className="flex gap-8 p-8 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[32px] hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                           <div className="w-28 h-36 rounded-2xl overflow-hidden shrink-0 bg-white dark:bg-zinc-950 shadow-2xl">
                               <img src={item.imageUrls[0]} className="w-full h-full object-cover" alt="" />
                            </div>
                            <div className="flex-grow text-left">
@@ -170,7 +170,7 @@ const OrderDetail: React.FC = () => {
                                  <p className="font-mono font-bold text-2xl text-green-500">${(item.price * item.quantity).toFixed(2)}</p>
                               </div>
                               <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-4">Phase: {item.selectedSize} / Load: {item.quantity}</p>
-                              <Link to={`/products/${item.id}`} className="inline-block px-4 py-2 bg-zinc-950 border border-zinc-800 rounded-lg text-[8px] font-black uppercase tracking-widest text-zinc-600 hover:text-green-500 hover:border-green-500 transition-colors">
+                              <Link to={`/products/${item.id}`} className="inline-block px-4 py-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-[8px] font-black uppercase tracking-widest text-zinc-600 hover:text-green-500 hover:border-green-500 transition-colors">
                                  ANALYZE ASSET
                               </Link>
                            </div>
@@ -181,15 +181,22 @@ const OrderDetail: React.FC = () => {
             </div>
 
             <div className="lg:col-span-1 space-y-8">
-               <div className="bg-zinc-900 border border-zinc-800 rounded-[40px] p-10 space-y-10 shadow-2xl sticky top-28 text-left">
+               <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-10 space-y-10 shadow-2xl sticky top-28 text-left">
                   <div>
                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-4 flex items-center gap-2"><MapPin size={16} /> Destination Node</h4>
-                     <p className="text-zinc-300 text-lg leading-relaxed italic">{order.shippingAddress}</p>
+                     <p className="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed italic">{order.shippingAddress}</p>
                   </div>
+
+                  {order.phoneNumber && (
+                     <div>
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-4 flex items-center gap-2"><Phone size={16} /> Secure Comms (Phone)</h4>
+                        <p className="text-zinc-600 dark:text-zinc-300 text-lg leading-relaxed font-mono">{order.phoneNumber}</p>
+                     </div>
+                  )}
 
                   <div>
                      <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600 mb-4 flex items-center gap-2">{order.paymentMethod === 'Card' ? <CreditCard size={16} /> : <Wallet size={16} />} Funding Protocol</h4>
-                     <div className="flex justify-between items-center bg-zinc-950 p-6 rounded-[24px] border border-zinc-800">
+                     <div className="flex justify-between items-center bg-white dark:bg-zinc-950 p-6 rounded-[24px] border border-zinc-200 dark:border-zinc-800">
                         <div className="text-left">
                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{order.paymentMethod}</p>
                            <p className={`text-xs font-black uppercase tracking-[0.2em] ${order.paymentStatus === 'Paid' ? 'text-green-500' : 'text-orange-500'}`}>{order.paymentStatus}</p>
@@ -198,7 +205,7 @@ const OrderDetail: React.FC = () => {
                      </div>
                   </div>
 
-                  <div className="pt-10 border-t border-zinc-800">
+                  <div className="pt-10 border-t border-zinc-200 dark:border-zinc-800">
                      <button onClick={() => window.print()} className="w-full bg-green-500 text-black font-black py-5 rounded-2xl hover:bg-green-400 hover:scale-[1.01] transition-all text-xs uppercase tracking-widest shadow-2xl">
                         PRINT MANIFEST (PDF)
                      </button>

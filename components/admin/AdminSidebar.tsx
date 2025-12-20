@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Package,
@@ -16,10 +16,17 @@ import {
     UserCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { auth } from '../../firebase';
 
 const AdminSidebar: React.FC = () => {
     const location = useLocation();
-    const { logout, user } = useAuth();
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        await auth.signOut();
+        navigate('/login');
+    };
 
     const menuGroups = [
         {
@@ -111,7 +118,7 @@ const AdminSidebar: React.FC = () => {
                     </div>
                 </div>
                 <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all group"
                 >
                     <LogOut size={16} />
