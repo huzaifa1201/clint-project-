@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { Mail, Lock, User as UserIcon, Loader2, AlertCircle } from 'lucide-react';
@@ -24,20 +24,28 @@ const Signup: React.FC = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const createdUser = userCredential.user;
 
+      // Send Verification Email
+      await sendEmailVerification(createdUser);
+
       if (createdUser) {
         await setDoc(doc(db, 'users', createdUser.uid), {
           uid: createdUser.uid,
           name,
           email,
-          role: 'ADMIN', // TEMPORARY: Default to ADMIN for testing
+          role: 'user', // Default to user (Fixed from ADMIN)
           addresses: [],
           wishlist: [],
           createdAt: serverTimestamp()
         });
       }
 
+      // Optional: You might want to sign them out or show a message to verify email before logging in.
+      // For now, alerting the user about the email.
+      alert("Account created! Please check your email to verify your account.");
+
       navigate('/');
     } catch (authErr: any) {
+      console.error(authErr);
       setError(authErr.message || 'Failed to create account');
     } finally {
       setLoading(false);
