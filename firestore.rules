@@ -6,7 +6,8 @@ service cloud.firestore {
     // Note: This relies on the 'users' document existing and having a 'role' field.
     function isAdmin() {
       return request.auth != null && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' || 
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     // User profiles

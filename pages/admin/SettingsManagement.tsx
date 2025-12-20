@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { SiteSettings } from '../../types';
-import { Save, Plus, Trash2, Link as LinkIcon, Facebook, Instagram, Twitter, Youtube, Image as ImageIcon, ToggleLeft, ToggleRight, Loader2 } from 'lucide-react';
+import { Save, Plus, Trash2, Link as LinkIcon, Facebook, Instagram, Twitter, Youtube, Image as ImageIcon, ToggleLeft, ToggleRight, Loader2, CreditCard, Lock } from 'lucide-react';
 
 const SettingsManagement: React.FC = () => {
     const [loading, setLoading] = useState(true);
@@ -33,7 +33,6 @@ const SettingsManagement: React.FC = () => {
     const saveSocials = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            // Safe Object Construction to avoid undefined
             const socialData = {
                 facebook: settings.socialLinks?.facebook || '',
                 instagram: settings.socialLinks?.instagram || '',
@@ -45,6 +44,23 @@ const SettingsManagement: React.FC = () => {
         } catch (err) {
             console.error("Social Save Error:", err);
             alert('Failed to save social links. See console.');
+        }
+    };
+
+    const savePaymentSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const paymentData = {
+                stripePublishableKey: settings.paymentConfig?.stripePublishableKey || '',
+                stripeSecretKey: settings.paymentConfig?.stripeSecretKey || '',
+                enableStripe: settings.paymentConfig?.enableStripe || false,
+                enableCOD: settings.paymentConfig?.enableCOD !== undefined ? settings.paymentConfig.enableCOD : true // Default to true if missing
+            };
+            await setDoc(doc(db, 'site_config', 'general'), { paymentConfig: paymentData }, { merge: true });
+            alert('Payment protocols updated.');
+        } catch (err) {
+            console.error("Payment Save Error:", err);
+            alert('Failed to update payment settings.');
         }
     };
 
@@ -148,6 +164,63 @@ const SettingsManagement: React.FC = () => {
 
                         <button className="w-full bg-blue-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-500 transition-all uppercase tracking-widest text-xs shadow-lg">
                             <Save size={16} /> Update Coordinates
+                        </button>
+                    </form>
+                </div>
+
+                {/* Payment Gateway Section */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-[32px] p-8 space-y-8 h-fit">
+                    <h3 className="flex items-center gap-2 font-black italic uppercase tracking-widest text-zinc-500 text-xs">
+                        <CreditCard size={14} className="text-green-500" /> Payment Gateway (Stripe)
+                    </h3>
+                    <form onSubmit={savePaymentSettings} className="space-y-6">
+                        <div className="flex flex-col gap-4 bg-zinc-950 p-4 rounded-xl border border-zinc-800">
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="checkbox"
+                                    checked={settings.paymentConfig?.enableCOD !== false} // Default true
+                                    onChange={(e) => setSettings({ ...settings, paymentConfig: { ...settings.paymentConfig!, enableCOD: e.target.checked } })}
+                                    className="w-5 h-5 accent-green-500 bg-zinc-900 border-zinc-700 rounded cursor-pointer"
+                                />
+                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Enable Cash on Delivery (COD)</span>
+                            </div>
+
+                            <div className="flex items-center gap-3 border-t border-zinc-800 pt-4">
+                                <input
+                                    type="checkbox"
+                                    checked={settings.paymentConfig?.enableStripe || false}
+                                    onChange={(e) => setSettings({ ...settings, paymentConfig: { ...settings.paymentConfig!, enableStripe: e.target.checked } })}
+                                    className="w-5 h-5 accent-green-500 bg-zinc-900 border-zinc-700 rounded cursor-pointer"
+                                />
+                                <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Enable Stripe Payments</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em]">Publishable Key</label>
+                            <input
+                                type="text"
+                                value={settings.paymentConfig?.stripePublishableKey || ''}
+                                onChange={(e) => setSettings({ ...settings, paymentConfig: { ...settings.paymentConfig!, stripePublishableKey: e.target.value } })}
+                                placeholder="pk_test_..."
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-mono text-zinc-300"
+                            />
+                        </div>
+
+                        <div className="space-y-2 relative">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><Lock size={12} /> Secret Key</label>
+                            <input
+                                type="password"
+                                value={settings.paymentConfig?.stripeSecretKey || ''}
+                                onChange={(e) => setSettings({ ...settings, paymentConfig: { ...settings.paymentConfig!, stripeSecretKey: e.target.value } })}
+                                placeholder="sk_test_..."
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-mono text-zinc-300"
+                            />
+                            <p className="text-[10px] text-red-500/80 mt-1 italic">* Storing secrets in frontend DB is risky. Ensure proper Firestore Rules.</p>
+                        </div>
+
+                        <button className="w-full bg-green-500 text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-400 transition-all uppercase tracking-widest text-xs shadow-lg">
+                            <Save size={16} /> Save Payment Config
                         </button>
                     </form>
                 </div>

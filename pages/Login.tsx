@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 
@@ -56,7 +56,18 @@ const Login: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-bold text-zinc-400 uppercase tracking-wider">Password</label>
-                <Link to="#" className="text-xs text-green-500 hover:underline">Forgot password?</Link>
+                <button type="button" onClick={async () => {
+                  if (!email) { setError('Enter your email first to reset password.'); return; }
+                  setLoading(true);
+                  try {
+                    await sendPasswordResetEmail(auth, email);
+                    alert('Password reset link sent to your email.');
+                  } catch (e: any) {
+                    setError(e.message);
+                  } finally {
+                    setLoading(false);
+                  }
+                }} className="text-xs text-green-500 hover:underline">Forgot password?</button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={20} />

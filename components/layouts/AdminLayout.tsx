@@ -1,6 +1,7 @@
 
 import React from 'react';
 import AdminSidebar from '../admin/AdminSidebar';
+import AdminHeader from '../admin/AdminHeader';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -8,12 +9,15 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     return (
-        <div className="min-h-screen bg-zinc-950">
+        <div className="min-h-screen bg-black text-white font-sans selection:bg-green-500 selection:text-black">
             <AdminSidebar />
-            <div className="lg:pl-64 min-h-screen pt-16 lg:pt-0">
-                <div className="mx-auto">
-                    {children}
-                </div>
+            <div className="lg:pl-72 min-h-screen flex flex-col">
+                <AdminHeader />
+                <main className="flex-1 p-8 bg-zinc-950/50">
+                    <div className="mx-auto max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {children}
+                    </div>
+                </main>
             </div>
         </div>
     );

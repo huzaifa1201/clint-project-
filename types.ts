@@ -101,4 +101,10 @@ export interface SiteSettings {
     linkUrl: string;
     active: boolean;
   }[];
+  paymentConfig?: {
+    stripePublishableKey: string;
+    stripeSecretKey: string;
+    enableStripe: boolean;
+    enableCOD: boolean;
+  };
 }

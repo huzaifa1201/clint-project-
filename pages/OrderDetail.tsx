@@ -114,8 +114,9 @@ const OrderDetail: React.FC = () => {
                   </div>
                )}
 
+
                {/* Cancel Button for User if Pending */}
-               {!isAdmin && order.status === 'Pending' && (
+               {(!isAdmin && order.status === 'Pending') && (
                   <div className="p-8 bg-red-500/5 border border-red-500/20 rounded-[32px] flex items-center justify-between gap-6 animate-in fade-in slide-in-from-top-2">
                      <div className="flex items-center gap-4 text-red-500">
                         <AlertTriangle size={24} />
