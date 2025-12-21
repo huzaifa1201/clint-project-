@@ -1,14 +1,37 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Mail, Send, CheckCircle, Loader2, MapPin } from 'lucide-react';
+import { Mail, Send, CheckCircle, Loader2, MapPin, Clock, Phone, MessageCircle } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
 import SEO from '../components/SEO';
 
 const ContactUs: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    email: 'ops@neonstitch.com',
+    phone: '+1 (555) NEON-OPS',
+    whatsapp: '',
+    address: 'Neon Tower, Cyber District 01',
+    workingHours: 'Mon — Fri: 09:00 - 22:00'
+  });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const docRef = doc(db, 'site_config', 'general');
+        const snap = await getDoc(docRef);
+        if (snap.exists() && snap.data().contactInfo) {
+          setContactInfo(snap.data().contactInfo);
+        }
+      } catch (err) {
+        console.error("Error fetching contact info:", err);
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,14 +79,37 @@ const ContactUs: React.FC = () => {
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl w-fit text-green-500"><Mail size={24} /></div>
               <div>
                 <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300">Email Us</h4>
-                <p className="text-zinc-500">ops@neonstitch.com</p>
+                <p className="text-zinc-500 font-mono text-xs">{contactInfo.email}</p>
               </div>
             </div>
+            <div className="space-y-4">
+              <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl w-fit text-green-500"><Phone size={24} /></div>
+              <div>
+                <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300">Helpline</h4>
+                <p className="text-zinc-500 font-mono text-xs">{contactInfo.phone}</p>
+              </div>
+            </div>
+            {contactInfo.whatsapp && (
+              <div className="space-y-4">
+                <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl w-fit text-green-500"><MessageCircle size={24} /></div>
+                <div>
+                  <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300">WhatsApp</h4>
+                  <a
+                    href={`https://wa.me/${contactInfo.whatsapp.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-green-500 font-mono text-xs hover:underline flex items-center gap-1"
+                  >
+                    Start Chat →
+                  </a>
+                </div>
+              </div>
+            )}
             <div className="space-y-4">
               <div className="p-3 bg-zinc-900 border border-zinc-800 rounded-xl w-fit text-green-500"><MapPin size={24} /></div>
               <div>
                 <h4 className="font-bold text-sm uppercase tracking-widest text-zinc-300">Headquarters</h4>
-                <p className="text-zinc-500">Neon Tower, Cyber District 01</p>
+                <p className="text-zinc-500 text-xs">{contactInfo.address}</p>
               </div>
             </div>
           </div>
@@ -71,9 +117,8 @@ const ContactUs: React.FC = () => {
           <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-3xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-[40px] rounded-full"></div>
             <h3 className="text-xl font-black italic uppercase tracking-tighter mb-4">Support Hours</h3>
-            <div className="space-y-2 text-sm text-zinc-400 font-medium">
-              <div className="flex justify-between"><span>Mon — Fri</span> <span className="text-white">09:00 - 22:00</span></div>
-              <div className="flex justify-between"><span>Sat — Sun</span> <span className="text-white">11:00 - 18:00</span></div>
+            <div className="space-y-2 text-sm text-zinc-400 font-medium font-mono">
+              <p className="text-white text-xs">{contactInfo.workingHours}</p>
             </div>
           </div>
         </div>

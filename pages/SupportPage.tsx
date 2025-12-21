@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { SupportPageContent } from '../types';
-import { ChevronLeft, Info, Truck, RefreshCcw, Ruler } from 'lucide-react';
+import { ChevronLeft, Info, Truck, RefreshCcw, Ruler, Shield, Scale } from 'lucide-react';
 import SEO from '../components/SEO';
 
 const SupportPage: React.FC = () => {
@@ -24,7 +24,9 @@ const SupportPage: React.FC = () => {
           const defaults: Record<string, any> = {
             'shipping': { title: 'Shipping Policy', content: 'Our global shipping network ensures delivery within 3-5 business days. All orders are tracked.' },
             'returns': { title: 'Return Policy', content: 'We offer a 30-day hassle-free return policy. Items must be in original condition.' },
-            'size-guide': { title: 'Size Guide', content: 'Most of our items are oversized. We recommend ordering your true size for a relaxed fit.' }
+            'size-guide': { title: 'Size Guide', content: 'Most of our items are oversized. We recommend ordering your true size for a relaxed fit.' },
+            'privacy-policy': { title: 'Privacy Policy', content: 'Your privacy is mission-critical. We encrypt all user data and never share intel with third-party agents.' },
+            'terms-conditions': { title: 'Terms & Conditions', content: 'By entering the NeonStitch ecosystem, you agree to our protocols regarding digital conduct and asset acquisition.' }
           };
           setData(defaults[slug || ''] ? { id: 'default', slug: slug!, ...defaults[slug!] } : null);
         }
@@ -42,6 +44,8 @@ const SupportPage: React.FC = () => {
       case 'shipping': return <Truck className="text-green-500" size={48} />;
       case 'returns': return <RefreshCcw className="text-green-500" size={48} />;
       case 'size-guide': return <Ruler className="text-green-500" size={48} />;
+      case 'privacy-policy': return <Shield className="text-green-500" size={48} />;
+      case 'terms-conditions': return <Scale className="text-green-500" size={48} />;
       default: return <Info className="text-green-500" size={48} />;
     }
   };

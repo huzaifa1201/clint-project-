@@ -9,34 +9,37 @@ import { ThemeProvider } from './context/ThemeContext.tsx';
 import Navbar from './components/Navbar.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import { db } from './firebase';
-import { Loader2, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+
+
+import { Loader2, Facebook, Instagram, Twitter, Youtube, Database } from 'lucide-react';
 import AdminLayout from './components/layouts/AdminLayout.tsx';
+import ErrorBoundary from './components/ErrorBoundary.tsx';
 
-// Pages
-import Home from './pages/Home.tsx';
-import Login from './pages/Login.tsx';
-import Signup from './pages/Signup.tsx';
-import ProductListing from './pages/ProductListing.tsx';
-import ProductDetails from './pages/ProductDetails.tsx';
-import Cart from './pages/Cart.tsx';
-import Checkout from './pages/Checkout.tsx';
-import Profile from './pages/Profile.tsx';
-import Wishlist from './pages/Wishlist.tsx';
-import OrderHistory from './pages/OrderHistory.tsx';
-import OrderDetail from './pages/OrderDetail.tsx';
-import SupportPage from './pages/SupportPage.tsx';
-import ContactUs from './pages/ContactUs.tsx';
+// Pages - Lazy Loaded for performance (with explicit extensions for Vite stability)
+const Home = React.lazy(() => import('./pages/Home.tsx'));
+const Login = React.lazy(() => import('./pages/Login.tsx'));
+const Signup = React.lazy(() => import('./pages/Signup.tsx'));
+const ProductListing = React.lazy(() => import('./pages/ProductListing.tsx'));
+const ProductDetails = React.lazy(() => import('./pages/ProductDetails.tsx'));
+const Cart = React.lazy(() => import('./pages/Cart.tsx'));
+const Checkout = React.lazy(() => import('./pages/Checkout.tsx'));
+const Profile = React.lazy(() => import('./pages/Profile.tsx'));
+const Wishlist = React.lazy(() => import('./pages/Wishlist.tsx'));
+const OrderHistory = React.lazy(() => import('./pages/OrderHistory.tsx'));
+const OrderDetail = React.lazy(() => import('./pages/OrderDetail.tsx'));
+const SupportPage = React.lazy(() => import('./pages/SupportPage.tsx'));
+const ContactUs = React.lazy(() => import('./pages/ContactUs.tsx'));
 
-// Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard.tsx';
-import ProductManagement from './pages/admin/ProductManagement.tsx';
-import CategoryManagement from './pages/admin/CategoryManagement.tsx';
-import OrderManagement from './pages/admin/OrderManagement.tsx';
-import UserManagement from './pages/admin/UserManagement.tsx';
-import BannerManagement from './pages/admin/BannerManagement.tsx';
-import SupportManagement from './pages/admin/SupportManagement.tsx';
-import SettingsManagement from './pages/admin/SettingsManagement.tsx';
-import MessageManagement from './pages/admin/MessageManagement.tsx';
+// Admin Pages - Lazy Loaded
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard.tsx'));
+const ProductManagement = React.lazy(() => import('./pages/admin/ProductManagement.tsx'));
+const CategoryManagement = React.lazy(() => import('./pages/admin/CategoryManagement.tsx'));
+const OrderManagement = React.lazy(() => import('./pages/admin/OrderManagement.tsx'));
+const UserManagement = React.lazy(() => import('./pages/admin/UserManagement.tsx'));
+const BannerManagement = React.lazy(() => import('./pages/admin/BannerManagement.tsx'));
+const SupportManagement = React.lazy(() => import('./pages/admin/SupportManagement.tsx'));
+const SettingsManagement = React.lazy(() => import('./pages/admin/SettingsManagement.tsx'));
+const MessageManagement = React.lazy(() => import('./pages/admin/MessageManagement.tsx'));
 
 
 // ScrollToTop component to fix scroll position on route change
@@ -55,18 +58,21 @@ const App: React.FC = () => {
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsSuccess, setNewsSuccess] = useState(false);
   const [socialLinks, setSocialLinks] = useState({ facebook: '', instagram: '', twitter: '', youtube: '' });
+  const [contactInfo, setContactInfo] = useState({ email: '', phone: '', whatsapp: '', address: '', workingHours: '' });
 
   React.useEffect(() => {
-    const fetchSocials = async () => {
+    const fetchGeneralConfig = async () => {
       try {
         const docRef = doc(db, 'site_config', 'general');
         const snap = await getDoc(docRef);
         if (snap.exists()) {
-          setSocialLinks(snap.data().socialLinks || {});
+          const data = snap.data();
+          setSocialLinks(data.socialLinks || {});
+          setContactInfo(data.contactInfo || { email: '', phone: '', address: '', workingHours: '' });
         }
-      } catch (err) { console.error("Social fetch error", err); }
+      } catch (err) { console.error("Config fetch error", err); }
     };
-    fetchSocials();
+    fetchGeneralConfig();
   }, []);
 
   const handleNewsletter = async (e: React.FormEvent) => {
@@ -96,33 +102,42 @@ const App: React.FC = () => {
             <ScrollToTop />
             <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col text-zinc-900 dark:text-white text-left transition-colors duration-300">
               <Navbar />
+
               <main className="flex-grow pt-16">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/signup" element={<Signup />} />
-                  <Route path="/products" element={<ProductListing />} />
-                  <Route path="/products/:id" element={<ProductDetails />} />
-                  <Route path="/support/:slug" element={<SupportPage />} />
-                  <Route path="/contact" element={<ContactUs />} />
-                  <Route path="/wishlist" element={<Wishlist />} />
+                <ErrorBoundary>
+                  <React.Suspense fallback={
+                    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
+                      <Loader2 className="animate-spin text-green-500" size={40} />
+                    </div>
+                  }>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/products" element={<ProductListing />} />
+                      <Route path="/products/:id" element={<ProductDetails />} />
+                      <Route path="/support/:slug" element={<SupportPage />} />
+                      <Route path="/contact" element={<ContactUs />} />
+                      <Route path="/wishlist" element={<Wishlist />} />
 
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
-                  <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
+                      <Route path="/cart" element={<Cart />} />
+                      <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                      <Route path="/orders" element={<ProtectedRoute><OrderHistory /></ProtectedRoute>} />
+                      <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
 
-                  <Route path="/admin" element={<ProtectedRoute adminOnly><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminLayout><ProductManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/categories" element={<ProtectedRoute adminOnly><AdminLayout><CategoryManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/banners" element={<ProtectedRoute adminOnly><AdminLayout><BannerManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminLayout><OrderManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/support" element={<ProtectedRoute adminOnly><AdminLayout><SupportManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/messages" element={<ProtectedRoute adminOnly><AdminLayout><MessageManagement /></AdminLayout></ProtectedRoute>} />
-                  <Route path="/admin/settings" element={<ProtectedRoute adminOnly><AdminLayout><SettingsManagement /></AdminLayout></ProtectedRoute>} />
-                </Routes>
+                      <Route path="/admin" element={<ProtectedRoute adminOnly><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/products" element={<ProtectedRoute adminOnly><AdminLayout><ProductManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/categories" element={<ProtectedRoute adminOnly><AdminLayout><CategoryManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/banners" element={<ProtectedRoute adminOnly><AdminLayout><BannerManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/orders" element={<ProtectedRoute adminOnly><AdminLayout><OrderManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/users" element={<ProtectedRoute adminOnly><AdminLayout><UserManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/support" element={<ProtectedRoute adminOnly><AdminLayout><SupportManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/messages" element={<ProtectedRoute adminOnly><AdminLayout><MessageManagement /></AdminLayout></ProtectedRoute>} />
+                      <Route path="/admin/settings" element={<ProtectedRoute adminOnly><AdminLayout><SettingsManagement /></AdminLayout></ProtectedRoute>} />
+                    </Routes>
+                  </React.Suspense>
+                </ErrorBoundary>
               </main>
               <footer className="bg-zinc-100 dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-900 py-20 px-4 transition-colors duration-300">
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
@@ -138,6 +153,7 @@ const App: React.FC = () => {
                       {socialLinks.twitter && <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-green-500 transition-colors"><Twitter size={20} /></a>}
                       {socialLinks.youtube && <a href={socialLinks.youtube} target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-green-500 transition-colors"><Youtube size={20} /></a>}
                     </div>
+                    {contactInfo.email && <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest pt-2">Mission Support: {contactInfo.email}</p>}
                   </div>
                   <div>
                     <h4 className="font-black mb-6 uppercase text-[10px] tracking-[0.2em] text-zinc-400">Inventory</h4>
@@ -152,6 +168,8 @@ const App: React.FC = () => {
                     <ul className="space-y-3 text-zinc-500 text-xs font-bold uppercase tracking-widest">
                       <li><Link to="/support/shipping" className="hover:text-green-500 transition-colors">Shipping Node</Link></li>
                       <li><Link to="/support/returns" className="hover:text-green-500 transition-colors">Return Protocol</Link></li>
+                      <li><Link to="/support/privacy-policy" className="hover:text-green-500 transition-colors">Privacy Protocol</Link></li>
+                      <li><Link to="/support/terms-conditions" className="hover:text-green-500 transition-colors">Terms of Service</Link></li>
                       <li><Link to="/contact" className="hover:text-green-500 transition-colors">Intel / Contact</Link></li>
                     </ul>
                   </div>

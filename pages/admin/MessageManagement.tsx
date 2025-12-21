@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, orderBy, query, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { ContactMessage } from '../../types';
 import { Trash2, Mail, MessageSquare, Loader2, Calendar } from 'lucide-react';
@@ -9,25 +9,27 @@ const MessageManagement: React.FC = () => {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchMessages = async () => {
-    setLoading(true);
-    try {
-      const q = query(collection(db, 'contact_messages'), orderBy('createdAt', 'desc'));
-      const snap = await getDocs(q);
-      setMessages(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ContactMessage)));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const q = query(collection(db, 'contact_messages'), orderBy('createdAt', 'desc'));
 
-  useEffect(() => { fetchMessages(); }, []);
+    const unsubscribe = onSnapshot(q, (snap) => {
+      setMessages(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ContactMessage)));
+      setLoading(false);
+    }, (err) => {
+      console.error("Transmission error:", err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (confirm('Permanently delete this message?')) {
-      await deleteDoc(doc(db, 'contact_messages', id));
-      fetchMessages();
+      try {
+        await deleteDoc(doc(db, 'contact_messages', id));
+      } catch (err) {
+        alert("Retraction failed.");
+      }
     }
   };
 

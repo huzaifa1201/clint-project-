@@ -56,36 +56,47 @@ const Cart: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Items List */}
         <div className="lg:col-span-2 space-y-8">
-          {cart.map(item => (
-            <div key={`${item.id}-${item.selectedSize}`} className="flex flex-col sm:flex-row gap-6 p-6 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl group hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
-              <div className="w-full sm:w-32 aspect-[3/4] rounded-xl overflow-hidden shrink-0">
-                <img src={item.imageUrls[0]} className="w-full h-full object-cover" alt="" />
-              </div>
-              <div className="flex-grow space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold uppercase tracking-tight group-hover:text-green-500 transition-colors">{item.name}</h3>
-                    <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">Size: {item.selectedSize}</p>
-                  </div>
-                  <button
-                    onClick={() => removeFromCart(item.id, item.selectedSize)}
-                    className="p-2 text-zinc-600 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
+          {cart.map(item => {
+            const itemImage = item.selectedColor
+              ? (item.colorVariants?.find(v => v.color === item.selectedColor)?.imageUrls[0] || item.imageUrls[0])
+              : item.imageUrls[0];
 
-                <div className="flex justify-between items-end">
-                  <div className="flex items-center gap-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2">
-                    <button onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)} className="p-2 text-zinc-500 hover:text-black dark:hover:text-white"><Minus size={16} /></button>
-                    <span className="w-8 text-center font-mono font-bold text-zinc-900 dark:text-white">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)} className="p-2 text-zinc-500 hover:text-black dark:hover:text-white"><Plus size={16} /></button>
+            return (
+              <div key={`${item.id}-${item.selectedSize}-${item.selectedColor || 'default'}`} className="flex flex-col sm:flex-row gap-6 p-6 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl group hover:border-zinc-300 dark:hover:border-zinc-700 transition-all">
+                <div className="w-full sm:w-32 aspect-[3/4] rounded-xl overflow-hidden shrink-0">
+                  <img src={itemImage} className="w-full h-full object-cover" alt="" />
+                </div>
+                <div className="flex-grow space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold uppercase tracking-tight group-hover:text-green-500 transition-colors">{item.name}</h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded">Size: {item.selectedSize}</span>
+                        {item.selectedColor && (
+                          <span className="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded">Color: {item.selectedColor}</span>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeFromCart(item.id, item.selectedSize, item.selectedColor)}
+                      className="p-2 text-zinc-600 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 size={20} />
+                    </button>
                   </div>
-                  <span className="text-xl font-mono font-bold text-green-500">{formatPrice((item.discountedPrice || item.price) * item.quantity, currency)}</span>
+
+                  <div className="flex justify-between items-end">
+                    <div className="flex items-center gap-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2">
+                      <button onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1, item.selectedColor)} className="p-2 text-zinc-500 hover:text-black dark:hover:text-white"><Minus size={16} /></button>
+                      <span className="w-8 text-center font-mono font-bold text-zinc-900 dark:text-white">{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1, item.selectedColor)} className="p-2 text-zinc-500 hover:text-black dark:hover:text-white"><Plus size={16} /></button>
+                    </div>
+                    <span className="text-xl font-mono font-bold text-green-500">{formatPrice((item.discountedPrice || item.price) * item.quantity, currency)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Summary */}
@@ -134,7 +145,7 @@ const Cart: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

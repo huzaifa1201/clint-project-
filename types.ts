@@ -26,6 +26,11 @@ export interface Category {
   price?: number; // Optional as it might not be relevant for a pure category object depending on usage
 }
 
+export interface ColorVariant {
+  color: string;
+  imageUrls: string[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -36,6 +41,7 @@ export interface Product {
   sizes: string[];
   stock: number;
   imageUrls: string[];
+  colorVariants?: ColorVariant[]; // Added for color-specific images
   tags?: string[];
   isPublished?: boolean;
 }
@@ -53,6 +59,7 @@ export interface Review {
 export interface CartItem extends Product {
   quantity: number;
   selectedSize: string;
+  selectedColor?: string; // Added for color support
 }
 
 export interface Order {
@@ -120,6 +127,13 @@ export interface SiteSettings {
   currency?: 'USD' | 'PKR' | 'INR' | 'EUR';
   deliveryCharges?: number;
   localPaymentMethods?: LocalPaymentMethod[]; // Array of local payment methods
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+    address?: string;
+    workingHours?: string;
+  };
 }
 
 export interface LocalPaymentMethod {

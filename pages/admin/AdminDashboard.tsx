@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, orderBy, limit, query, Timestamp } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { ShoppingBag, Package, Users, TrendingUp, Clock, AlertCircle, Loader2, Image as ImageIcon, Edit3, Activity } from 'lucide-react';
+
+import { ShoppingBag, Package, Users, TrendingUp, Clock, AlertCircle, Loader2, Image as ImageIcon, Edit3, Activity, Database } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Banner } from '../../types';
+import { seedDatabase } from '../../utils/seedDb';
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -113,9 +115,22 @@ const AdminDashboard: React.FC = () => {
           <h1 className="text-4xl font-black italic tracking-tighter uppercase">Neon Ops Command</h1>
           <p className="text-zinc-500 font-medium">Global logistics and intelligence overview.</p>
         </div>
-        <Link to="/admin/banners" className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-green-500 hover:text-green-500 transition-all flex items-center gap-2">
-          <Edit3 size={16} /> Recalibrate Visuals
-        </Link>
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to add 20 dummy products?")) {
+                seedDatabase();
+              }
+            }}
+            className="bg-green-500 text-black px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-400 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+          >
+            <Database size={16} /> Seed Asset Data
+          </button>
+          <Link to="/admin/banners" className="bg-zinc-900 border border-zinc-800 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-green-500 hover:text-green-500 transition-all flex items-center gap-2">
+            <Edit3 size={16} /> Recalibrate Visuals
+          </Link>
+        </div>
       </div>
 
       {error && (

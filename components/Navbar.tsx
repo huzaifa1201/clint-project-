@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon, Home as HomeIcon, Store } from 'lucide-react';
+import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon, Home as HomeIcon, Store, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useCart } from '../context/CartContext.tsx';
 import { useWishlist } from '../context/WishlistContext.tsx';
@@ -38,6 +38,7 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Home</Link>
             <Link to="/products" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Shop</Link>
+            <Link to="/contact" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Contact</Link>
             {isAdmin && (
               <Link to="/admin" className="flex items-center gap-1 text-green-500 font-black text-xs uppercase tracking-widest">
                 <ShieldCheck size={18} /> Admin
@@ -133,6 +134,9 @@ const Navbar: React.FC = () => {
             </Link>
             <Link to="/products" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
               <Store size={18} /> Shop
+            </Link>
+            <Link to="/contact" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
+              <Mail size={18} /> Contact
             </Link>
             <Link to="/wishlist" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2 relative" onClick={() => setIsOpen(false)}>
               <Heart size={18} /> Wishlist

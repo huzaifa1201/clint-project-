@@ -15,35 +15,32 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState('USD');
 
+
   useEffect(() => {
     const fetchData = async () => {
-      // 1. Fetch Products
+      setLoading(true);
       try {
-        const productsSnap = await getDocs(query(collection(db, 'products'), limit(4)));
+        // Fetch all data in parallel for maximum speed
+        const [productsSnap, bannersSnap, configSnap] = await Promise.all([
+          getDocs(query(collection(db, 'products'), limit(4))),
+          getDocs(query(collection(db, 'banners'), limit(1))),
+          getDoc(doc(db, 'site_config', 'general'))
+        ]);
+
+        // 1. Process Products
         setFeaturedProducts(productsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product)));
-      } catch (e) {
-        console.error("Products fetch error:", e);
-      }
 
-      // 2. Fetch Banners
-      try {
-        const bannersSnap = await getDocs(query(collection(db, 'banners'), limit(1)));
+        // 2. Process Banners
         setBanners(bannersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Banner)));
-      } catch (e) {
-        console.error("Banners fetch error:", e);
-      }
 
-      // 3. Fetch Site Config (Ads + Currency)
-      try {
-        const configSnap = await getDoc(doc(db, 'site_config', 'general'));
+        // 3. Process Site Config
         if (configSnap.exists()) {
           const data = configSnap.data();
           setPromoAds(data.promotionalAds?.filter((ad: any) => ad.active) || []);
           setCurrency(data.currency || 'USD');
         }
       } catch (e) {
-        console.error("Config fetch error:", e);
-        // Fail silently for config, don't break page
+        console.error("Critical mission failure in data acquisition:", e);
       } finally {
         setLoading(false);
       }
@@ -71,10 +68,12 @@ const Home: React.FC = () => {
       {/* Hero Section - Powered by Admin Banners */}
       <section className="relative h-[85vh] w-full overflow-hidden flex items-center bg-zinc-100 dark:bg-zinc-950">
         <div className="absolute inset-0 bg-white dark:bg-zinc-950">
+
           <img
             src={activeBanner.imageUrl}
             className="w-full h-full object-cover opacity-60 transition-opacity duration-1000"
             alt="Brand Hero"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent dark:from-zinc-950 dark:via-zinc-950/60 dark:to-transparent"></div>
         </div>
@@ -107,7 +106,8 @@ const Home: React.FC = () => {
         <section className="max-w-7xl mx-auto px-4 space-y-8">
           {promoAds.map((ad, idx) => (
             <a key={idx} href={ad.linkUrl || '#'} className="block relative w-full aspect-[21/9] md:aspect-[32/9] rounded-[32px] overflow-hidden group border border-zinc-200 dark:border-zinc-800 hover:border-green-500/50 transition-all shadow-2xl">
-              <img src={ad.imageUrl} alt="Promo" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" />
+
+              <img src={ad.imageUrl} alt="Promo" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" loading="lazy" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </a>
           ))}
@@ -147,10 +147,12 @@ const Home: React.FC = () => {
           {featuredProducts.map(product => (
             <Link key={product.id} to={`/products/${product.id}`} className="group space-y-6 text-left">
               <div className="relative aspect-[3/4] overflow-hidden rounded-[32px] bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
+
                 <img
                   src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 {product.stock === 0 && (

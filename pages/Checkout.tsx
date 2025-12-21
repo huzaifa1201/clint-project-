@@ -340,16 +340,29 @@ const GenericCheckoutForm = ({
           <div className="bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[40px] p-10 sticky top-28 shadow-2xl text-left">
             <h3 className="text-2xl font-black italic uppercase tracking-tighter mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-6 text-left">Manifest Summary</h3>
             <div className="space-y-6 max-h-[350px] overflow-y-auto pr-4 mb-10 text-left">
-              {cart.map((item, idx) => (
-                <div key={idx} className="flex gap-6 group">
-                  <div className="w-20 h-24 bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 group-hover:border-green-500 transition-colors"><img src={item.imageUrls[0]} alt="" className="w-full h-full object-cover" /></div>
-                  <div className="flex-grow space-y-1">
-                    <p className="font-black text-sm uppercase tracking-tight leading-none truncate w-40 text-left text-black dark:text-white">{item.name}</p>
-                    <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest text-left">Size: {item.selectedSize} / Qty: {item.quantity}</p>
-                    <p className="text-green-500 font-mono font-bold text-lg text-left">{formatPrice(item.price * item.quantity, siteCurrency)}</p>
+              {cart.map((item, idx) => {
+                const itemImage = item.selectedColor
+                  ? (item.colorVariants?.find(v => v.color === item.selectedColor)?.imageUrls[0] || item.imageUrls[0])
+                  : item.imageUrls[0];
+
+                return (
+                  <div key={idx} className="flex gap-6 group">
+                    <div className="w-20 h-24 bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 group-hover:border-green-500 transition-colors">
+                      <img src={itemImage} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-grow space-y-1">
+                      <p className="font-black text-sm uppercase tracking-tight leading-none truncate w-40 text-left text-black dark:text-white">{item.name}</p>
+                      <div className="flex flex-wrap gap-1">
+                        <p className="text-zinc-500 text-[9px] uppercase font-bold tracking-widest text-left px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded">S: {item.selectedSize} / Q: {item.quantity}</p>
+                        {item.selectedColor && (
+                          <p className="text-zinc-500 text-[9px] uppercase font-bold tracking-widest text-left px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded">C: {item.selectedColor}</p>
+                        )}
+                      </div>
+                      <p className="text-green-500 font-mono font-bold text-lg text-left">{formatPrice(item.price * item.quantity, siteCurrency)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
               <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Subtotal</span><span className="text-black dark:text-white font-mono text-left">{formatPrice(cartTotal, siteCurrency)}</span></div>

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { SiteSettings } from '../../types';
-import { Save, Plus, Trash2, Link as LinkIcon, Facebook, Instagram, Twitter, Youtube, Image as ImageIcon, ToggleLeft, ToggleRight, Loader2, CreditCard, Lock, Globe } from 'lucide-react';
+import { Save, Plus, Trash2, Link as LinkIcon, Facebook, Instagram, Twitter, Youtube, Image as ImageIcon, ToggleLeft, ToggleRight, Loader2, CreditCard, Lock, Globe, Phone, Mail, MapPin, Clock, MessageCircle } from 'lucide-react';
 import { PAYMENT_METHODS_BY_COUNTRY, COUNTRIES, CountryName } from '../../data/paymentMethods';
 import CountryPaymentSelector from '../../components/CountryPaymentSelector';
 
@@ -12,7 +12,8 @@ const SettingsManagement: React.FC = () => {
     const [settings, setSettings] = useState<SiteSettings>({
         socialLinks: { facebook: '', instagram: '', twitter: '', youtube: '' },
         promotionalAds: [],
-        localPaymentMethods: []
+        localPaymentMethods: [],
+        contactInfo: { email: '', phone: '', whatsapp: '', address: '', workingHours: '' }
     });
     const [newAd, setNewAd] = useState({ imageUrl: '', linkUrl: '', active: true });
     const [selectedCountry, setSelectedCountry] = useState<CountryName>('Pakistan');
@@ -56,6 +57,17 @@ const SettingsManagement: React.FC = () => {
         } catch (err) {
             console.error("Social Save Error:", err);
             alert('Failed to save social links. See console.');
+        }
+    };
+
+    const saveContactInfo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await setDoc(doc(db, 'site_config', 'general'), { contactInfo: settings.contactInfo }, { merge: true });
+            alert('Contact protocols updated.');
+        } catch (err) {
+            console.error("Contact Save Error:", err);
+            alert('Failed to update contact info.');
         }
     };
 
@@ -316,6 +328,68 @@ const SettingsManagement: React.FC = () => {
 
                         <button className="w-full bg-green-500 text-black font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-green-400 transition-all uppercase tracking-widest text-xs shadow-lg">
                             <Save size={16} /> Save Payment Config
+                        </button>
+                    </form>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="bg-zinc-900 border border-zinc-800 rounded-[32px] p-8 space-y-8 h-fit text-left">
+                    <h3 className="flex items-center gap-2 font-black italic uppercase tracking-widest text-zinc-500 text-xs">
+                        <Phone size={14} className="text-orange-500" /> Contact Node Configuration
+                    </h3>
+                    <form onSubmit={saveContactInfo} className="space-y-6">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><Mail size={12} /> Mission Support Email</label>
+                            <input
+                                type="email"
+                                value={settings.contactInfo?.email || ''}
+                                onChange={(e) => setSettings({ ...settings, contactInfo: { ...settings.contactInfo!, email: e.target.value } })}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-bold text-zinc-300"
+                                placeholder="ops@neonstitch.com"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><Phone size={12} /> Helpline Number</label>
+                            <input
+                                type="tel"
+                                value={settings.contactInfo?.phone || ''}
+                                onChange={(e) => setSettings({ ...settings, contactInfo: { ...settings.contactInfo!, phone: e.target.value } })}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-bold text-zinc-300"
+                                placeholder="+1 (555) NEON-OPS"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><MessageCircle size={12} /> WhatsApp Business Number</label>
+                            <input
+                                type="tel"
+                                value={settings.contactInfo?.whatsapp || ''}
+                                onChange={(e) => setSettings({ ...settings, contactInfo: { ...settings.contactInfo!, whatsapp: e.target.value } })}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-bold text-zinc-300"
+                                placeholder="+923001234567 (with country code)"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><MapPin size={12} /> HQ Coordinates (Address)</label>
+                            <input
+                                type="text"
+                                value={settings.contactInfo?.address || ''}
+                                onChange={(e) => setSettings({ ...settings, contactInfo: { ...settings.contactInfo!, address: e.target.value } })}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-bold text-zinc-300"
+                                placeholder="Neon Tower, Cyber District 01"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-zinc-600 tracking-[0.2em] flex items-center gap-2"><Clock size={12} /> Ops Hours (Working Hours)</label>
+                            <input
+                                type="text"
+                                value={settings.contactInfo?.workingHours || ''}
+                                onChange={(e) => setSettings({ ...settings, contactInfo: { ...settings.contactInfo!, workingHours: e.target.value } })}
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 text-sm font-bold text-zinc-300"
+                                placeholder="Mon — Fri: 09:00 - 22:00"
+                            />
+                        </div>
+                        <button className="w-full bg-orange-600 text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-orange-500 transition-all uppercase tracking-widest text-xs shadow-lg">
+                            <Save size={16} /> Update Contact Protocols
                         </button>
                     </form>
                 </div>

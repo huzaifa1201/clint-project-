@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Product } from '../../types';
-import { Plus, Edit, Trash2, Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Hash } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Hash, Palette } from 'lucide-react';
 
 type SortField = 'price' | 'stock' | null;
 type SortOrder = 'asc' | 'desc';
@@ -28,7 +28,8 @@ const ProductManagement: React.FC = () => {
     stock: '',
     imageUrls: [''],
     sizes: ['S', 'M', 'L', 'XL'],
-    tags: ''
+    tags: '',
+    colorVariants: [] as { color: string, imageUrls: string[] }[]
   });
 
   const fetchProducts = async () => {
@@ -92,7 +93,14 @@ const ProductManagement: React.FC = () => {
         discountedPrice: formData.discountedPrice ? parseFloat(formData.discountedPrice) : undefined,
         stock: parseInt(formData.stock),
         imageUrls: formData.imageUrls.filter(u => u.trim() !== ''),
-        tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== '')
+        tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== ''),
+        colorVariants: formData.colorVariants
+          .filter(v => v.color.trim() !== '')
+          .map(v => ({
+            color: v.color.trim(),
+            imageUrls: v.imageUrls.filter(u => u.trim() !== '')
+          }))
+          .filter(v => v.imageUrls.length > 0)
       };
 
       if (editingId) {
@@ -103,7 +111,7 @@ const ProductManagement: React.FC = () => {
 
       setShowModal(false);
       setEditingId(null);
-      setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' });
+      setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '', colorVariants: [] });
       fetchProducts();
     } catch (err: any) {
       alert(err.code === 'permission-denied' ? 'Permission Denied. Check Firestore Rules.' : 'Error saving product');
@@ -121,7 +129,8 @@ const ProductManagement: React.FC = () => {
       stock: p.stock.toString(),
       imageUrls: p.imageUrls.length > 0 ? p.imageUrls : [''],
       sizes: p.sizes,
-      tags: p.tags ? p.tags.join(', ') : ''
+      tags: p.tags ? p.tags.join(', ') : '',
+      colorVariants: p.colorVariants || []
     });
     setShowModal(true);
   };
@@ -150,7 +159,7 @@ const ProductManagement: React.FC = () => {
           <p className="text-zinc-500">Add, edit, or remove products from the storefront.</p>
         </div>
         <button
-          onClick={() => { setShowModal(true); setEditingId(null); setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' }); }}
+          onClick={() => { setShowModal(true); setEditingId(null); setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '', colorVariants: [] }); }}
           className="bg-green-500 text-black px-6 py-3 rounded-xl font-black flex items-center gap-2 hover:bg-green-400 transition-all uppercase tracking-widest text-sm"
         >
           <Plus size={20} /> Add New Product
@@ -299,9 +308,93 @@ const ProductManagement: React.FC = () => {
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-500 uppercase">Image URL</label>
-                <input type="url" value={formData.imageUrls[0]} onChange={(e) => setFormData({ ...formData, imageUrls: [e.target.value] })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500" required />
+              <div className="space-y-4">
+                <label className="text-xs font-bold text-zinc-500 uppercase">General Gallery (Image URLs)</label>
+                {formData.imageUrls.map((url, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(e) => {
+                        const newUrls = [...formData.imageUrls];
+                        newUrls[idx] = e.target.value;
+                        setFormData({ ...formData, imageUrls: newUrls });
+                      }}
+                      className="flex-grow bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500"
+                      placeholder="https://example.com/image.jpg"
+                      required={idx === 0}
+                    />
+                    {idx > 0 && (
+                      <button type="button" onClick={() => setFormData({ ...formData, imageUrls: formData.imageUrls.filter((_, i) => i !== idx) })} className="text-red-500">
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={() => setFormData({ ...formData, imageUrls: [...formData.imageUrls, ''] })} className="text-xs font-bold text-green-500 uppercase flex items-center gap-1">
+                  <Plus size={14} /> Add More Images
+                </button>
+              </div>
+
+              {/* Color Specific Images */}
+              <div className="space-y-4 pt-4 border-t border-zinc-800">
+                <label className="text-xs font-bold text-zinc-500 uppercase flex items-center gap-2">
+                  <Palette size={14} /> Color Specific Images (Filtration Control)
+                </label>
+                {formData.colorVariants.map((variant, vIdx) => (
+                  <div key={vIdx} className="p-4 bg-zinc-950 border border-zinc-800 rounded-2xl space-y-4 shadow-inner">
+                    <div className="flex items-center justify-between">
+                      <input
+                        placeholder="Color Name (e.g. Neon Red)"
+                        value={variant.color}
+                        onChange={(e) => {
+                          const newVariants = [...formData.colorVariants];
+                          newVariants[vIdx].color = e.target.value;
+                          setFormData({ ...formData, colorVariants: newVariants });
+                        }}
+                        className="bg-transparent border-b border-zinc-800 outline-none text-sm font-bold uppercase tracking-widest py-1 w-full mr-4 focus:border-green-500"
+                      />
+                      <button type="button" onClick={() => {
+                        const newVariants = formData.colorVariants.filter((_, i) => i !== vIdx);
+                        setFormData({ ...formData, colorVariants: newVariants });
+                      }} className="text-red-500 hover:text-red-400 bg-red-500/10 p-2 rounded-lg"><Trash2 size={16} /></button>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Images for this color:</p>
+                      {variant.imageUrls.map((url, uIdx) => (
+                        <div key={uIdx} className="flex gap-2">
+                          <input
+                            value={url}
+                            onChange={(e) => {
+                              const newVariants = [...formData.colorVariants];
+                              newVariants[vIdx].imageUrls[uIdx] = e.target.value;
+                              setFormData({ ...formData, colorVariants: newVariants });
+                            }}
+                            placeholder="Image URL"
+                            className="flex-grow bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs outline-none focus:border-green-500"
+                          />
+                          <button type="button" onClick={() => {
+                            const newVariants = [...formData.colorVariants];
+                            newVariants[vIdx].imageUrls = variant.imageUrls.filter((_, i) => i !== uIdx);
+                            setFormData({ ...formData, colorVariants: newVariants });
+                          }} className="text-zinc-600 hover:text-red-500"><X size={14} /></button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => {
+                        const newVariants = [...formData.colorVariants];
+                        newVariants[vIdx].imageUrls.push('');
+                        setFormData({ ...formData, colorVariants: newVariants });
+                      }} className="text-[10px] font-black uppercase tracking-widest text-green-500 hover:text-green-400 flex items-center gap-1">
+                        <Plus size={10} /> Add Image for this color
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={() => {
+                  setFormData({ ...formData, colorVariants: [...formData.colorVariants, { color: '', imageUrls: [''] }] });
+                }} className="w-full py-4 border border-dashed border-zinc-800 rounded-xl text-zinc-500 hover:text-green-500 hover:border-green-500/50 transition-all text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2">
+                  <Plus size={14} /> Add New Color Variant
+                </button>
               </div>
               <button type="submit" className="w-full bg-green-500 text-black font-black py-4 rounded-xl hover:bg-green-400 transition-all uppercase tracking-widest">
                 {editingId ? 'UPDATE PRODUCT' : 'CREATE PRODUCT'}

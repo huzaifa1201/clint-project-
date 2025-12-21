@@ -168,10 +168,12 @@ const ProductListing: React.FC = () => {
         ) : processedProducts.map(product => (
           <Link key={product.id} to={`/products/${product.id}`} className="group space-y-4">
             <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-300">
+
               <img
                 src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
               />
               {product.stock === 0 && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">

@@ -15,7 +15,9 @@ const SupportManagement: React.FC = () => {
   const slugs = [
     { id: 'shipping', label: 'Shipping Policy' },
     { id: 'returns', label: 'Return Policy' },
-    { id: 'size-guide', label: 'Size Guide' }
+    { id: 'size-guide', label: 'Size Guide' },
+    { id: 'privacy-policy', label: 'Privacy Policy' },
+    { id: 'terms-conditions', label: 'Terms & Conditions' }
   ];
 
   const fetchPage = async () => {

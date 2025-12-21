@@ -7,7 +7,7 @@ import { Product, Review } from '../types';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
-import { ShoppingBag, ChevronLeft, Star, Heart, CheckCircle2, Loader2, MessageSquare, Trash2 } from 'lucide-react';
+import { ShoppingBag, ChevronLeft, Star, Heart, CheckCircle2, Loader2, MessageSquare, Trash2, Palette } from 'lucide-react';
 import SEO from '../components/SEO';
 import { formatPrice } from '../utils/currency';
 
@@ -18,6 +18,7 @@ const ProductDetails: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
@@ -39,6 +40,9 @@ const ProductDetails: React.FC = () => {
           const data = { id: snap.id, ...snap.data() } as Product;
           setProduct(data);
           if (data.sizes.length > 0) setSelectedSize(data.sizes[0]);
+          if (data.colorVariants && data.colorVariants.length > 0) {
+            setSelectedColor(data.colorVariants[0].color);
+          }
         }
       } catch (e) {
         console.error(e);
@@ -75,7 +79,7 @@ const ProductDetails: React.FC = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    const success = addToCart(product, selectedSize);
+    const success = addToCart(product, selectedSize, selectedColor || undefined);
     if (success) {
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
@@ -113,20 +117,41 @@ const ProductDetails: React.FC = () => {
     }
   };
 
+
+
+  // Reset active image when color changes - MOVED UP BEFORE CONDITIONAL RETURNS
+  useEffect(() => {
+    setActiveImage(0);
+  }, [selectedColor]);
+
+  // Derived state calculations (not hooks) - can be after checks or safe to calculate
   const averageRating = reviews.length > 0
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null;
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center bg-zinc-950"><Loader2 className="animate-spin text-green-500 w-10 h-10" /></div>;
-  if (!product) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center bg-zinc-950">
-    <h1 className="text-2xl font-bold italic uppercase tracking-tighter">TRANSIMISSION LOST: PRODUCT NOT FOUND</h1>
-    <Link to="/products" className="text-green-500 underline font-black">RETURN TO BASE</Link>
-  </div>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
+      <Loader2 className="animate-spin text-green-500 w-10 h-10" />
+    </div>
+  );
 
+  if (!product) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-center bg-white dark:bg-zinc-950 px-4">
+      <h1 className="text-2xl font-bold italic uppercase tracking-tighter text-black dark:text-white">TRANSMISSION LOST: PRODUCT NOT FOUND</h1>
+      <Link to="/products" className="text-green-500 underline font-black">RETURN TO BASE</Link>
+    </div>
+  );
 
+  const inWishlist = product ? isInWishlist(product.id) : false;
 
-  // ... inside ProductDetails component return
-  const inWishlist = isInWishlist(product.id);
+  // Defensive check for images
+  const productImages = product.imageUrls || [];
+  const colorVariants = product.colorVariants || [];
+
+  // Filter images based on selected color if variants exist
+  const displayImages = (selectedColor && colorVariants.length > 0)
+    ? (colorVariants.find(v => v.color === selectedColor)?.imageUrls || productImages)
+    : productImages;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12 text-left">
@@ -144,7 +169,7 @@ const ProductDetails: React.FC = () => {
         <div className="space-y-4">
           <div className="aspect-[3/4] rounded-3xl overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 relative shadow-2xl">
             <img
-              src={product.imageUrls[activeImage] || 'https://picsum.photos/800/1000'}
+              src={displayImages[activeImage] || 'https://picsum.photos/800/1000'}
               className={`w-full h-full object-cover ${product.stock === 0 ? 'grayscale opacity-50' : ''}`}
               alt={product.name}
             />
@@ -155,7 +180,7 @@ const ProductDetails: React.FC = () => {
             )}
           </div>
           <div className="grid grid-cols-4 gap-4">
-            {product.imageUrls.map((url, idx) => (
+            {displayImages.map((url, idx) => (
               <button key={idx} onClick={() => setActiveImage(idx)} className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'border-zinc-200 dark:border-zinc-800'}`}>
                 <img src={url} className="w-full h-full object-cover" alt="" />
               </button>
@@ -193,13 +218,34 @@ const ProductDetails: React.FC = () => {
             <div className="space-y-3">
               <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Select Size</span>
               <div className="flex flex-wrap gap-3">
-                {product.sizes.map(size => (
+
+                {(product.sizes || []).map(size => (
                   <button key={size} onClick={() => setSelectedSize(size)} className={`w-14 h-12 flex items-center justify-center rounded-xl border-2 font-black transition-all ${selectedSize === size ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-zinc-600'}`}>
                     {size}
                   </button>
                 ))}
               </div>
             </div>
+
+            {/* Color Selection */}
+            {product.colorVariants && product.colorVariants.length > 0 && (
+              <div className="space-y-3">
+                <span className="text-xs font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                  <Palette size={14} /> Select Color
+                </span>
+                <div className="flex flex-wrap gap-3">
+                  {product.colorVariants.map(variant => (
+                    <button
+                      key={variant.color}
+                      onClick={() => setSelectedColor(variant.color)}
+                      className={`px-4 py-2 flex items-center justify-center rounded-xl border-2 font-bold text-xs uppercase transition-all ${selectedColor === variant.color ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-zinc-800 hover:border-zinc-600'}`}
+                    >
+                      {variant.color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-4">
               <button
@@ -309,7 +355,10 @@ const ProductDetails: React.FC = () => {
                       </div>
                       <div className="text-left">
                         <h4 className="font-black uppercase tracking-tight text-black dark:text-white">{review.userName}</h4>
-                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">{review.createdAt?.toDate().toLocaleDateString() || 'Recently logged'}</p>
+
+                        <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
+                          {review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString() : 'Recently logged'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
