@@ -9,6 +9,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { ShoppingBag, ChevronLeft, Star, Heart, CheckCircle2, Loader2, MessageSquare, Trash2 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { formatPrice } from '../utils/currency';
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const ProductDetails: React.FC = () => {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [added, setAdded] = useState(false);
+  const [currency, setCurrency] = useState('USD');
 
   // Review form state
   const [rating, setRating] = useState(5);
@@ -46,6 +48,19 @@ const ProductDetails: React.FC = () => {
     };
 
     fetchProduct();
+
+    // Fetch currency
+    const fetchCurrency = async () => {
+      try {
+        const configSnap = await getDoc(doc(db, 'site_config', 'general'));
+        if (configSnap.exists()) {
+          setCurrency(configSnap.data().currency || 'USD');
+        }
+      } catch (e) {
+        console.error('Currency fetch error:', e);
+      }
+    };
+    fetchCurrency();
 
     if (id) {
       const q = query(collection(db, 'reviews'), where('productId', '==', id));
@@ -161,7 +176,15 @@ const ProductDetails: React.FC = () => {
               )}
             </div>
             <h1 className="text-3xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">{product.name}</h1>
-            <p className="text-2xl md:text-4xl font-mono font-bold text-green-500">${product.price.toFixed(2)}</p>
+            {product.discountedPrice ? (
+              <div className="flex items-center gap-4">
+                <p className="text-2xl md:text-4xl font-mono font-bold text-green-500">{formatPrice(product.discountedPrice, currency)}</p>
+                <p className="text-xl md:text-2xl font-mono font-bold text-zinc-600 line-through">{formatPrice(product.price, currency)}</p>
+                <span className="px-3 py-1 bg-red-500 text-white text-xs font-black rounded-full uppercase">SALE</span>
+              </div>
+            ) : (
+              <p className="text-2xl md:text-4xl font-mono font-bold text-green-500">{formatPrice(product.price, currency)}</p>
+            )}
           </div>
 
           <p className="text-zinc-400 leading-relaxed italic border-l-2 border-green-500/50 pl-6 text-lg">"{product.description}"</p>

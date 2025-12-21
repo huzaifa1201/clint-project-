@@ -4,12 +4,30 @@ import { collection, addDoc, serverTimestamp, doc, getDoc, runTransaction } from
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { CreditCard, Truck, MapPin, Loader2, ArrowLeft, CheckCircle, AlertCircle, Wallet, Lock, Phone } from 'lucide-react';
+import { CreditCard, Truck, MapPin, Loader2, ArrowLeft, CheckCircle, AlertCircle, Wallet, Lock, Phone, Hash } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { LocalPaymentMethod } from '../types';
+import { formatPrice } from '../utils/currency';
 
 // --- Generic Form Component (Logic & UI) ---
-const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }: { stripe: any, elements: any, isStripeEnabled: boolean, isCODEnabled: boolean }) => {
+const GenericCheckoutForm = ({
+  stripe,
+  elements,
+  isStripeEnabled,
+  isCODEnabled,
+  localPaymentMethods,
+  siteCurrency,
+  deliveryFee
+}: {
+  stripe: any,
+  elements: any,
+  isStripeEnabled: boolean,
+  isCODEnabled: boolean,
+  localPaymentMethods: LocalPaymentMethod[],
+  siteCurrency: string,
+  deliveryFee: number
+}) => {
   const { user, profile } = useAuth();
   const { cart, cartTotal, clearCart } = useCart();
   const navigate = useNavigate();
@@ -18,22 +36,25 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
   const [success, setSuccess] = useState(false);
   const [address, setAddress] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [selectedLocalPayment, setSelectedLocalPayment] = useState<LocalPaymentMethod | null>(null);
+
+  const finalTotal = cartTotal + deliveryFee;
 
   // Determine default payment method
-  const [paymentMethod, setPaymentMethod] = useState<'Card' | 'COD' | ''>(
-    isStripeEnabled ? 'Card' : (isCODEnabled ? 'COD' : '')
+  const [paymentMethod, setPaymentMethod] = useState<'Card' | 'COD' | 'Local' | ''>(
+    isStripeEnabled ? 'Card' : (isCODEnabled ? 'COD' : (localPaymentMethods.length > 0 ? 'Local' : ''))
   );
 
-  // Update payment method if props change or initial state was empty but options exist
+  // Update payment method if props change
   useEffect(() => {
     if (!paymentMethod) {
       if (isStripeEnabled) setPaymentMethod('Card');
       else if (isCODEnabled) setPaymentMethod('COD');
+      else if (localPaymentMethods.length > 0) setPaymentMethod('Local');
     }
-  }, [isStripeEnabled, isCODEnabled]);
+  }, [isStripeEnabled, isCODEnabled, localPaymentMethods]);
 
-  // Fallback State for Non-Stripe Card Input
-  const [cardData, setCardData] = useState({ number: '', expiry: '', cvc: '', name: '' });
   const [paymentError, setPaymentError] = useState('');
 
   const selectSavedAddress = (addr: string) => setAddress(addr);
@@ -58,13 +79,23 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
       return;
     }
 
+    if (paymentMethod === 'Local') {
+      if (!selectedLocalPayment) {
+        setPaymentError("ERROR: Please select a payment method.");
+        return;
+      }
+      if (!transactionId.trim()) {
+        setPaymentError("TRANSACTION ERROR: Transaction ID is required for local payment.");
+        return;
+      }
+    }
+
     let paymentToken = 'N/A';
     let pStatus: 'Paid' | 'Pending' | 'Failed' = 'Pending';
 
     // PAYMENT PROCESSING
     if (paymentMethod === 'Card') {
       if (isStripeEnabled && stripe && elements) {
-        // STRIPE LOGIC
         const cardEl = elements.getElement(CardElement);
         if (!cardEl) return;
 
@@ -84,17 +115,20 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
           return;
         }
       } else {
-        // UNSAFE/MANUAL LOGIC (Fallback)
         setPaymentError("Secure Gateway (Stripe) not active. Cannot process card.");
         return;
       }
     }
 
+    if (paymentMethod === 'Local') {
+      pStatus = 'Pending'; // Admin will verify transaction
+    }
+
     setLoading(true);
     try {
-      // INVENTORY CHECK & DECREMENT LOGIC (ATOMIC TRANSACTION)
       await runTransaction(db, async (transaction) => {
-        // 1. Check stock for ALL items
+        // 1. READ PHASE: Fetch and verify all product docs first
+        const productSnapshots = [];
         for (const item of cart) {
           const productRef = doc(db, 'products', item.id);
           const productDoc = await transaction.get(productRef);
@@ -108,17 +142,24 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
             throw new Error(`STOCK CRITICAL: ${item.name} has only ${currentStock} units remaining.`);
           }
 
-          // 2. Decrement Stock
-          transaction.update(productRef, { stock: currentStock - item.quantity });
+          productSnapshots.push({ ref: productRef, newStock: currentStock - item.quantity });
+        }
+
+        // 2. WRITE PHASE: Perform all updates and set operations
+        for (const snap of productSnapshots) {
+          transaction.update(snap.ref, { stock: snap.newStock });
         }
 
         // 3. Create Order
         const newOrderRef = doc(collection(db, 'orders'));
-        transaction.set(newOrderRef, {
+        const orderData: any = {
           userId: user.uid,
           userName: profile?.name || 'Guest',
           items: cart,
-          totalPrice: cartTotal,
+          subtotal: cartTotal,
+          deliveryFee: deliveryFee,
+          totalPrice: finalTotal,
+          currency: siteCurrency,
           status: 'Pending',
           paymentMethod: paymentMethod,
           paymentStatus: paymentMethod === 'Card' ? pStatus : 'Pending',
@@ -126,7 +167,14 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
           shippingAddress: address.trim(),
           phoneNumber: phoneNumber.trim(),
           createdAt: serverTimestamp()
-        });
+        };
+
+        if (paymentMethod === 'Local' && selectedLocalPayment) {
+          orderData.localPaymentMethod = selectedLocalPayment.name;
+          orderData.transactionId = transactionId.trim();
+        }
+
+        transaction.set(newOrderRef, orderData);
       });
 
       clearCart();
@@ -149,6 +197,8 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
       </div>
     );
   }
+
+  const hasAnyPaymentMethod = isStripeEnabled || isCODEnabled || localPaymentMethods.length > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -190,19 +240,22 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
             <section className="space-y-6">
               <div className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-[10px]"><Wallet size={18} /> 02 / Payment Protocol</div>
 
-              {!isStripeEnabled && !isCODEnabled && (
+              {!hasAnyPaymentMethod && (
                 <div className="p-6 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-center">
                   <AlertCircle className="mx-auto mb-2" />
                   <p className="text-xs font-black uppercase tracking-widest">No payment methods currently active.</p>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {isStripeEnabled && (
-                  <button type="button" onClick={() => setPaymentMethod('Card')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'Card' ? 'bg-white text-black border-white' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><CreditCard size={20} /> Credit Card</button>
+                  <button type="button" onClick={() => { setPaymentMethod('Card'); setSelectedLocalPayment(null); }} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'Card' ? 'bg-white text-black border-white' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><CreditCard size={20} /> Credit Card</button>
                 )}
                 {isCODEnabled && (
-                  <button type="button" onClick={() => setPaymentMethod('COD')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'COD' ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><Truck size={20} /> Cash on Delivery</button>
+                  <button type="button" onClick={() => { setPaymentMethod('COD'); setSelectedLocalPayment(null); }} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'COD' ? 'bg-green-500 text-black border-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><Truck size={20} /> Cash on Delivery</button>
+                )}
+                {localPaymentMethods.length > 0 && (
+                  <button type="button" onClick={() => setPaymentMethod('Local')} className={`py-5 rounded-2xl border font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all ${paymentMethod === 'Local' ? 'bg-purple-500 text-white border-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'bg-zinc-100 dark:bg-zinc-900 text-zinc-500 border-zinc-200 dark:border-zinc-800'}`}><Wallet size={20} /> Local Payment</button>
                 )}
               </div>
 
@@ -210,7 +263,6 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
                 <div className="p-8 bg-zinc-900 border border-zinc-800 rounded-3xl space-y-4 animate-in slide-in-from-top-4">
                   {paymentError && address.trim() && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl flex items-center gap-3 text-xs font-bold uppercase tracking-widest"><AlertCircle size={16} /> {paymentError}</div>}
 
-                  {/* STRIPE ELEMENTS UI */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase text-green-500 tracking-widest mb-2"><Lock size={12} /> Secure 256-bit Stripe Encryption</div>
                     <div className="p-4 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 rounded-xl">
@@ -236,9 +288,51 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
                   <p className="text-zinc-400 text-sm leading-relaxed italic">"Pay in cash upon successful deployment to your coordinates."</p>
                 </div>
               )}
+
+              {paymentMethod === 'Local' && localPaymentMethods.length > 0 && (
+                <div className="p-8 bg-purple-500/5 border border-purple-500/20 rounded-3xl animate-in slide-in-from-top-4 space-y-6">
+                  {paymentError && address.trim() && <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl flex items-center gap-3 text-xs font-bold uppercase tracking-widest"><AlertCircle size={16} /> {paymentError}</div>}
+
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase text-zinc-600 dark:text-zinc-500 tracking-[0.2em]">Select Payment Method</label>
+                    <div className="grid grid-cols-1 gap-3">
+                      {localPaymentMethods.map(pm => (
+                        <button
+                          key={pm.id}
+                          type="button"
+                          onClick={() => setSelectedLocalPayment(pm)}
+                          className={`text-left p-6 rounded-2xl border transition-all ${selectedLocalPayment?.id === pm.id ? 'bg-purple-500/10 border-purple-500' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'}`}
+                        >
+                          <h4 className="font-black text-lg uppercase tracking-tight mb-2">{pm.name}</h4>
+                          {pm.accountName && <p className="text-xs text-zinc-600 dark:text-zinc-400 font-mono mb-1">Account: {pm.accountName}</p>}
+                          {pm.accountNumber && <p className="text-xs text-zinc-600 dark:text-zinc-400 font-mono mb-2">Number: {pm.accountNumber}</p>}
+                          {pm.instructions && <p className="text-xs text-zinc-500 italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3 mt-2">{pm.instructions}</p>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {selectedLocalPayment && (
+                    <div className="space-y-2 pt-4 border-t border-purple-500/20">
+                      <label className="text-[10px] font-black uppercase text-zinc-600 dark:text-zinc-500 tracking-[0.2em] flex items-center gap-1">
+                        <Hash size={12} /> Transaction ID <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={transactionId}
+                        onChange={(e) => setTransactionId(e.target.value)}
+                        placeholder="Enter your transaction/reference ID"
+                        className="w-full bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-2xl px-6 py-4 outline-none focus:border-purple-500 transition-colors text-black dark:text-white font-mono"
+                      />
+                      <p className="text-[10px] text-zinc-500 italic ml-4">After payment, enter the transaction ID you received</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
-            <button type="submit" disabled={loading || cart.length === 0 || (!isStripeEnabled && !isCODEnabled)} className="w-full bg-green-500 text-black font-black py-6 rounded-[32px] flex items-center justify-center gap-4 hover:bg-green-400 hover:scale-[1.01] transition-all uppercase tracking-widest shadow-2xl disabled:opacity-50">
-              {loading ? <Loader2 className="animate-spin" /> : <>EXECUTE MISSION (${cartTotal.toFixed(2)})</>}
+            <button type="submit" disabled={loading || cart.length === 0 || !hasAnyPaymentMethod} className="w-full bg-green-500 text-black font-black py-6 rounded-[32px] flex items-center justify-center gap-4 hover:bg-green-400 hover:scale-[1.01] transition-all uppercase tracking-widest shadow-2xl disabled:opacity-50">
+              {loading ? <Loader2 className="animate-spin" /> : <>EXECUTE MISSION ({formatPrice(finalTotal, siteCurrency)})</>}
             </button>
           </form>
         </div>
@@ -252,14 +346,15 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
                   <div className="flex-grow space-y-1">
                     <p className="font-black text-sm uppercase tracking-tight leading-none truncate w-40 text-left text-black dark:text-white">{item.name}</p>
                     <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest text-left">Size: {item.selectedSize} / Qty: {item.quantity}</p>
-                    <p className="text-green-500 font-mono font-bold text-lg text-left">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-green-500 font-mono font-bold text-lg text-left">{formatPrice(item.price * item.quantity, siteCurrency)}</p>
                   </div>
                 </div>
               ))}
             </div>
             <div className="space-y-4 pt-6 border-t border-zinc-200 dark:border-zinc-800">
-              <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Subtotal</span><span className="text-black dark:text-white font-mono text-left">${cartTotal.toFixed(2)}</span></div>
-              <div className="flex justify-between items-center pt-4"><span className="font-black italic uppercase text-xl text-left">Grand Total</span><span className="text-3xl font-mono font-bold text-green-500 text-left">${cartTotal.toFixed(2)}</span></div>
+              <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Subtotal</span><span className="text-black dark:text-white font-mono text-left">{formatPrice(cartTotal, siteCurrency)}</span></div>
+              <div className="flex justify-between text-zinc-500 text-xs font-bold uppercase tracking-widest text-left"><span>Delivery Protocol</span><span className="text-black dark:text-white font-mono text-left">{deliveryFee === 0 ? "FREE" : formatPrice(deliveryFee, siteCurrency)}</span></div>
+              <div className="flex justify-between items-center pt-4"><span className="font-black italic uppercase text-xl text-left">Grand Total</span><span className="text-3xl font-mono font-bold text-green-500 text-left">{formatPrice(finalTotal, siteCurrency)}</span></div>
             </div>
           </div>
         </div>
@@ -270,19 +365,19 @@ const GenericCheckoutForm = ({ stripe, elements, isStripeEnabled, isCODEnabled }
 
 // --- Wrappers ---
 
-const StripeWrapper = ({ stripeKey, enableCOD, enableStripe }: { stripeKey: string, enableCOD: boolean, enableStripe: boolean }) => {
+const StripeWrapper = ({ stripeKey, enableCOD, enableStripe, localPaymentMethods, siteCurrency, deliveryFee }: { stripeKey: string, enableCOD: boolean, enableStripe: boolean, localPaymentMethods: LocalPaymentMethod[], siteCurrency: string, deliveryFee: number }) => {
   const [stripePromise] = useState(() => loadStripe(stripeKey));
   return (
     <Elements stripe={stripePromise}>
-      <StripeContent enableCOD={enableCOD} enableStripe={enableStripe} />
+      <StripeContent enableCOD={enableCOD} enableStripe={enableStripe} localPaymentMethods={localPaymentMethods} siteCurrency={siteCurrency} deliveryFee={deliveryFee} />
     </Elements>
   );
 };
 
-const StripeContent = ({ enableCOD, enableStripe }: { enableCOD: boolean, enableStripe: boolean }) => {
+const StripeContent = ({ enableCOD, enableStripe, localPaymentMethods, siteCurrency, deliveryFee }: { enableCOD: boolean, enableStripe: boolean, localPaymentMethods: LocalPaymentMethod[], siteCurrency: string, deliveryFee: number }) => {
   const stripe = useStripe();
   const elements = useElements();
-  return <GenericCheckoutForm stripe={stripe} elements={elements} isStripeEnabled={enableStripe} isCODEnabled={enableCOD} />;
+  return <GenericCheckoutForm stripe={stripe} elements={elements} isStripeEnabled={enableStripe} isCODEnabled={enableCOD} localPaymentMethods={localPaymentMethods} siteCurrency={siteCurrency} deliveryFee={deliveryFee} />;
 }
 
 // --- Main Page ---
@@ -291,6 +386,9 @@ const Checkout: React.FC = () => {
   const [stripeKey, setStripeKey] = useState<string | null>(null);
   const [enableStripe, setEnableStripe] = useState(false);
   const [enableCOD, setEnableCOD] = useState(true);
+  const [localPaymentMethods, setLocalPaymentMethods] = useState<LocalPaymentMethod[]>([]);
+  const [siteCurrency, setSiteCurrency] = useState('USD');
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -300,12 +398,17 @@ const Checkout: React.FC = () => {
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           const data = snap.data();
-          // Default COD to true if not present
           const cod = data.paymentConfig?.enableCOD !== undefined ? data.paymentConfig.enableCOD : true;
           const stripeOn = data.paymentConfig?.enableStripe || false;
 
           setEnableCOD(cod);
           setEnableStripe(stripeOn);
+          setSiteCurrency(data.currency || 'USD');
+          setDeliveryFee(data.deliveryCharges || 0);
+
+          // Fetch local payment methods
+          const localMethods = (data.localPaymentMethods || []).filter((pm: LocalPaymentMethod) => pm.active);
+          setLocalPaymentMethods(localMethods);
 
           if (stripeOn && data.paymentConfig?.stripePublishableKey) {
             setStripeKey(data.paymentConfig.stripePublishableKey);
@@ -323,10 +426,10 @@ const Checkout: React.FC = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950"><Loader2 className="animate-spin text-green-500" /></div>;
 
   if (stripeKey && enableStripe) {
-    return <StripeWrapper stripeKey={stripeKey} enableCOD={enableCOD} enableStripe={true} />;
+    return <StripeWrapper stripeKey={stripeKey} enableCOD={enableCOD} enableStripe={true} localPaymentMethods={localPaymentMethods} siteCurrency={siteCurrency} deliveryFee={deliveryFee} />;
   }
 
-  return <GenericCheckoutForm stripe={null} elements={null} isStripeEnabled={false} isCODEnabled={enableCOD} />;
+  return <GenericCheckoutForm stripe={null} elements={null} isStripeEnabled={false} isCODEnabled={enableCOD} localPaymentMethods={localPaymentMethods} siteCurrency={siteCurrency} deliveryFee={deliveryFee} />;
 };
 
 export default Checkout;

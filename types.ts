@@ -30,6 +30,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  discountedPrice?: number; // Optional discounted price
   category: string;
   description: string;
   sizes: string[];
@@ -59,13 +60,18 @@ export interface Order {
   userId: string;
   userName: string;
   items: CartItem[];
+  subtotal: number;
+  deliveryFee: number;
   totalPrice: number;
+  currency?: string;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  paymentMethod: 'Card' | 'COD';
+  paymentMethod: 'Card' | 'COD' | 'Local'; // Added Local payment
   paymentStatus: 'Paid' | 'Pending' | 'Failed';
   createdAt: any;
   shippingAddress: string;
-  phoneNumber?: string; // Added phone number
+  phoneNumber?: string;
+  transactionId?: string; // For local payment methods
+  localPaymentMethod?: string; // Name of local payment (e.g., EasyPaisa)
 }
 
 export interface Banner {
@@ -111,4 +117,16 @@ export interface SiteSettings {
     enableStripe: boolean;
     enableCOD: boolean;
   };
+  currency?: 'USD' | 'PKR' | 'INR' | 'EUR';
+  deliveryCharges?: number;
+  localPaymentMethods?: LocalPaymentMethod[]; // Array of local payment methods
+}
+
+export interface LocalPaymentMethod {
+  id: string;
+  name: string; // e.g., "EasyPaisa", "JazzCash"
+  accountName: string; // Account holder name
+  accountNumber: string; // Account/Phone number
+  instructions?: string; // Optional payment instructions
+  active: boolean;
 }

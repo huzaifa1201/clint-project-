@@ -7,6 +7,8 @@ import { Order } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { ChevronLeft, Package, Truck, CheckCircle, Clock, MapPin, CreditCard, Wallet, ShoppingBag, ShieldAlert, XCircle, AlertTriangle, ExternalLink, X, Activity, Globe, Phone } from 'lucide-react';
 
+import { formatPrice } from '../utils/currency';
+
 const OrderDetail: React.FC = () => {
    const { id } = useParams();
    const { isAdmin, user } = useAuth();
@@ -167,7 +169,7 @@ const OrderDetail: React.FC = () => {
                            <div className="flex-grow text-left">
                               <div className="flex justify-between items-start mb-2">
                                  <h4 className="font-black text-2xl uppercase tracking-tight leading-none">{item.name}</h4>
-                                 <p className="font-mono font-bold text-2xl text-green-500">${(item.price * item.quantity).toFixed(2)}</p>
+                                 <p className="font-mono font-bold text-2xl text-green-500">{formatPrice(item.price * item.quantity, order.currency || 'USD')}</p>
                               </div>
                               <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em] mb-4">Phase: {item.selectedSize} / Load: {item.quantity}</p>
                               <Link to={`/products/${item.id}`} className="inline-block px-4 py-2 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-[8px] font-black uppercase tracking-widest text-zinc-600 hover:text-green-500 hover:border-green-500 transition-colors">
@@ -200,9 +202,18 @@ const OrderDetail: React.FC = () => {
                         <div className="text-left">
                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{order.paymentMethod}</p>
                            <p className={`text-xs font-black uppercase tracking-[0.2em] ${order.paymentStatus === 'Paid' ? 'text-green-500' : 'text-orange-500'}`}>{order.paymentStatus}</p>
+                           {order.paymentMethod === 'Local' && order.localPaymentMethod && (
+                              <p className="text-[10px] font-bold text-purple-500 mt-2">{order.localPaymentMethod}</p>
+                           )}
                         </div>
-                        <span className="font-mono font-bold text-2xl text-green-500">${order.totalPrice.toFixed(2)}</span>
+                        <span className="font-mono font-bold text-2xl text-green-500">{formatPrice(order.totalPrice, order.currency || 'USD')}</span>
                      </div>
+                     {order.paymentMethod === 'Local' && order.transactionId && (
+                        <div className="mt-4 p-4 bg-purple-500/5 border border-purple-500/20 rounded-2xl">
+                           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-2">Transaction ID</p>
+                           <p className="font-mono text-sm text-purple-500 font-bold break-all">{order.transactionId}</p>
+                        </div>
+                     )}
                   </div>
 
                   <div className="pt-10 border-t border-zinc-200 dark:border-zinc-800">

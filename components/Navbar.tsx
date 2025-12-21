@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon, Home as HomeIcon, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useCart } from '../context/CartContext.tsx';
 import { useWishlist } from '../context/WishlistContext.tsx';
@@ -19,6 +19,7 @@ const Navbar: React.FC = () => {
   const handleLogout = async () => {
     await auth.signOut();
     navigate('/login');
+    setIsOpen(false);
   };
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
@@ -27,11 +28,13 @@ const Navbar: React.FC = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center font-bold text-black italic">NS</div>
             <span className="text-xl font-bold tracking-tighter text-black dark:text-white">NEONSTITCH</span>
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Home</Link>
             <Link to="/products" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Shop</Link>
@@ -42,7 +45,8 @@ const Navbar: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Desktop Right Side Icons */}
+          <div className="hidden md:flex items-center gap-2">
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -81,22 +85,95 @@ const Navbar: React.FC = () => {
                 SIGN IN
               </Link>
             )}
+          </div>
 
-            <button className="md:hidden p-2 text-zinc-500 dark:text-zinc-400 ml-2" onClick={() => setIsOpen(!isOpen)}>
+          {/* Mobile: Only Home, Shop, and Menu Button */}
+          <div className="flex md:hidden items-center gap-3">
+            <Link to="/" className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors">
+              <HomeIcon size={18} />
+            </Link>
+            <Link to="/products" className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors">
+              <Store size={18} />
+            </Link>
+            <button className="p-2 text-zinc-500 dark:text-zinc-400" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Side Navigation */}
       {isOpen && (
         <div className="md:hidden bg-white dark:bg-zinc-950 border-b border-zinc-200 dark:border-zinc-800 animate-in slide-in-from-top-4">
           <div className="px-4 py-6 space-y-4">
-            <Link to="/" className="block text-zinc-500 font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>Home</Link>
-            <Link to="/products" className="block text-zinc-500 font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>Shop</Link>
-            <Link to="/wishlist" className="block text-zinc-500 font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>Wishlist</Link>
-            {isAdmin && <Link to="/admin" className="block text-green-500 font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>Admin</Link>}
-            {user && <Link to="/profile" className="block text-zinc-500 font-black uppercase tracking-widest text-xs" onClick={() => setIsOpen(false)}>Profile</Link>}
+            {/* Theme Toggle in Mobile Menu */}
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
+              <span className="text-xs font-black uppercase tracking-widest text-zinc-500">Theme</span>
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-2 px-3 py-2 bg-zinc-100 dark:bg-zinc-900 rounded-lg text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
+              >
+                {theme === 'dark' ? (
+                  <>
+                    <Sun size={16} />
+                    <span className="text-xs font-bold">Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon size={16} />
+                    <span className="text-xs font-bold">Dark</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <Link to="/" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
+              <HomeIcon size={18} /> Home
+            </Link>
+            <Link to="/products" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
+              <Store size={18} /> Shop
+            </Link>
+            <Link to="/wishlist" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2 relative" onClick={() => setIsOpen(false)}>
+              <Heart size={18} /> Wishlist
+              {wishlist.length > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">{wishlist.length}</span>
+              )}
+            </Link>
+            <Link to="/cart" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2 relative" onClick={() => setIsOpen(false)}>
+              <ShoppingBag size={18} /> Cart
+              {cartCount > 0 && (
+                <span className="ml-auto bg-green-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full">{cartCount}</span>
+              )}
+            </Link>
+
+            {/* User Section */}
+            {user ? (
+              <>
+                <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4">
+                  <Link to="/profile" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
+                    <User size={18} /> Profile ({profile?.name})
+                  </Link>
+                  {isAdmin && (
+                    <Link to="/admin" className="flex items-center gap-3 text-green-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
+                      <ShieldCheck size={18} /> Admin Panel
+                    </Link>
+                  )}
+                  <button onClick={handleLogout} className="flex items-center gap-3 text-red-500 font-black uppercase tracking-widest text-xs py-2 w-full">
+                    <LogOut size={18} /> Logout
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4">
+                <Link to="/login" className="block w-full bg-green-500 text-black font-black rounded-xl py-3 text-center hover:bg-green-400 transition-all text-xs tracking-widest uppercase" onClick={() => setIsOpen(false)}>
+                  SIGN IN
+                </Link>
+                <Link to="/signup" className="block w-full mt-2 bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white font-black rounded-xl py-3 text-center hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all text-xs tracking-widest uppercase" onClick={() => setIsOpen(false)}>
+                  SIGN UP
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

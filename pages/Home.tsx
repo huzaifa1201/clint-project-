@@ -6,12 +6,14 @@ import { db } from '../firebase';
 import { Product, Banner } from '../types';
 import { ChevronRight, ArrowRight, Zap, Shield, Truck, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
+import { formatPrice } from '../utils/currency';
 
 const Home: React.FC = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [promoAds, setPromoAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,11 +33,13 @@ const Home: React.FC = () => {
         console.error("Banners fetch error:", e);
       }
 
-      // 3. Fetch Site Config (Ads)
+      // 3. Fetch Site Config (Ads + Currency)
       try {
         const configSnap = await getDoc(doc(db, 'site_config', 'general'));
         if (configSnap.exists()) {
-          setPromoAds(configSnap.data().promotionalAds?.filter((ad: any) => ad.active) || []);
+          const data = configSnap.data();
+          setPromoAds(data.promotionalAds?.filter((ad: any) => ad.active) || []);
+          setCurrency(data.currency || 'USD');
         }
       } catch (e) {
         console.error("Config fetch error:", e);
@@ -157,7 +161,14 @@ const Home: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-black text-xl text-zinc-800 dark:text-zinc-200 group-hover:text-green-500 transition-colors uppercase tracking-tight">{product.name}</h3>
-                <p className="text-green-500 font-mono font-bold text-lg mt-1">${product.price.toFixed(2)}</p>
+                {product.discountedPrice ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-green-500 font-mono font-bold text-lg">{formatPrice(product.discountedPrice, currency)}</p>
+                    <p className="text-zinc-500 font-mono text-sm line-through">{formatPrice(product.price, currency)}</p>
+                  </div>
+                ) : (
+                  <p className="text-green-500 font-mono font-bold text-lg mt-1">{formatPrice(product.price, currency)}</p>
+                )}
               </div>
             </Link>
           ))}

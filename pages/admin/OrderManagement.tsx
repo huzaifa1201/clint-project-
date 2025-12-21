@@ -5,6 +5,7 @@ import { db } from '../../firebase';
 import { Order } from '../../types';
 import { Search, Loader2, Package, Eye, Filter, AlertCircle, Calendar, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatPrice } from '../../utils/currency';
 
 const OrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -182,8 +183,14 @@ const OrderManagement: React.FC = () => {
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      <span className="font-mono font-bold text-sm text-green-500">${order.totalPrice.toFixed(2)}</span>
+                      <span className="font-mono font-bold text-sm text-green-500">{formatPrice(order.totalPrice, order.currency || 'USD')}</span>
                       <span className="text-[8px] font-black uppercase text-zinc-600 tracking-widest">{order.paymentMethod}</span>
+                      {order.paymentMethod === 'Local' && order.localPaymentMethod && (
+                        <span className="text-[8px] text-purple-500 font-bold mt-1">{order.localPaymentMethod}</span>
+                      )}
+                      {order.paymentMethod === 'Local' && order.transactionId && (
+                        <span className="text-[8px] text-zinc-500 font-mono mt-1">TRX: {order.transactionId}</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-8 py-6">

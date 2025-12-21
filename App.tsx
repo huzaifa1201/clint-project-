@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { AuthProvider } from './context/AuthContext.tsx';
 import { CartProvider } from './context/CartContext.tsx';
@@ -38,6 +38,17 @@ import SupportManagement from './pages/admin/SupportManagement.tsx';
 import SettingsManagement from './pages/admin/SettingsManagement.tsx';
 import MessageManagement from './pages/admin/MessageManagement.tsx';
 
+
+// ScrollToTop component to fix scroll position on route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const App: React.FC = () => {
   const [newsEmail, setNewsEmail] = useState('');
@@ -82,6 +93,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <WishlistProvider>
           <CartProvider>
+            <ScrollToTop />
             <div className="min-h-screen bg-white dark:bg-zinc-950 flex flex-col text-zinc-900 dark:text-white text-left transition-colors duration-300">
               <Navbar />
               <main className="flex-grow pt-16">

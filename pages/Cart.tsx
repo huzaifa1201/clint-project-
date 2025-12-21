@@ -1,12 +1,36 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useCart } from '../context/CartContext';
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from 'lucide-react';
 import SEO from '../components/SEO';
+import { formatPrice } from '../utils/currency';
 
 const Cart: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, cartTotal } = useCart();
+  const [currency, setCurrency] = useState('USD');
+  const [deliveryCharges, setDeliveryCharges] = useState(0);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'site_config', 'general');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setCurrency(data.currency || 'USD');
+          setDeliveryCharges(data.deliveryCharges || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const finalTotal = cartTotal + deliveryCharges;
 
   if (cart.length === 0) {
     return (
@@ -57,7 +81,7 @@ const Cart: React.FC = () => {
                     <span className="w-8 text-center font-mono font-bold text-zinc-900 dark:text-white">{item.quantity}</span>
                     <button onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)} className="p-2 text-zinc-500 hover:text-black dark:hover:text-white"><Plus size={16} /></button>
                   </div>
-                  <span className="text-xl font-mono font-bold text-green-500">${(item.price * item.quantity).toFixed(2)}</span>
+                  <span className="text-xl font-mono font-bold text-green-500">{formatPrice((item.discountedPrice || item.price) * item.quantity, currency)}</span>
                 </div>
               </div>
             </div>
@@ -72,19 +96,23 @@ const Cart: React.FC = () => {
             <div className="space-y-4 mb-8 text-sm">
               <div className="flex justify-between text-zinc-500">
                 <span>Subtotal</span>
-                <span className="font-mono font-bold text-black dark:text-white">${cartTotal.toFixed(2)}</span>
+                <span className="font-mono font-bold text-black dark:text-white">{formatPrice(cartTotal, currency)}</span>
               </div>
               <div className="flex justify-between text-zinc-500">
-                <span>Shipping</span>
-                <span className="text-green-500 font-bold uppercase">FREE</span>
+                <span>Delivery</span>
+                {deliveryCharges === 0 ? (
+                  <span className="text-green-500 font-bold uppercase">FREE</span>
+                ) : (
+                  <span className="font-mono font-bold text-black dark:text-white">{formatPrice(deliveryCharges, currency)}</span>
+                )}
               </div>
               <div className="flex justify-between text-zinc-500">
                 <span>Tax</span>
-                <span className="font-mono font-bold text-black dark:text-white">$0.00</span>
+                <span className="font-mono font-bold text-black dark:text-white">{formatPrice(0, currency)}</span>
               </div>
               <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
                 <span className="text-lg font-black uppercase">Total</span>
-                <span className="text-2xl font-mono font-bold text-green-500">${cartTotal.toFixed(2)}</span>
+                <span className="text-2xl font-mono font-bold text-green-500">{formatPrice(finalTotal, currency)}</span>
               </div>
             </div>
 

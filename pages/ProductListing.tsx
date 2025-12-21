@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Product } from '../types';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Search, X, Hash } from 'lucide-react';
 import SEO from '../components/SEO';
+import { formatPrice } from '../utils/currency';
 
 const ProductListing: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,20 +16,28 @@ const ProductListing: React.FC = () => {
   const tagFilter = searchParams.get('tag');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch products
         const querySnapshot = await getDocs(collection(db, 'products'));
         const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         setProducts(data);
+
+        // Fetch currency
+        const configSnap = await getDoc(doc(db, 'site_config', 'general'));
+        if (configSnap.exists()) {
+          setCurrency(configSnap.data().currency || 'USD');
+        }
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
 
   const allTags = useMemo(() => {
@@ -186,7 +195,14 @@ const ProductListing: React.FC = () => {
             <div>
               <div className="flex justify-between items-start">
                 <h3 className="font-bold text-lg leading-tight group-hover:text-green-500 transition-colors uppercase tracking-tight">{product.name}</h3>
-                <span className="font-mono font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors">${product.price.toFixed(2)}</span>
+                {product.discountedPrice ? (
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className="font-mono font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors">{formatPrice(product.discountedPrice, currency)}</span>
+                    <span className="font-mono text-xs text-zinc-600 line-through">{formatPrice(product.price, currency)}</span>
+                  </div>
+                ) : (
+                  <span className="font-mono font-bold text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white transition-colors">{formatPrice(product.price, currency)}</span>
+                )}
               </div>
               <p className="text-zinc-500 dark:text-zinc-600 text-xs font-bold uppercase tracking-widest mt-1">{product.category}</p>
             </div>

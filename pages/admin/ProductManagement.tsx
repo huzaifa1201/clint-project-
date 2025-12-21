@@ -22,6 +22,7 @@ const ProductManagement: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    discountedPrice: '', // Add discounted price
     category: '',
     description: '',
     stock: '',
@@ -88,6 +89,7 @@ const ProductManagement: React.FC = () => {
       const payload = {
         ...formData,
         price: parseFloat(formData.price),
+        discountedPrice: formData.discountedPrice ? parseFloat(formData.discountedPrice) : undefined,
         stock: parseInt(formData.stock),
         imageUrls: formData.imageUrls.filter(u => u.trim() !== ''),
         tags: formData.tags.split(',').map(t => t.trim()).filter(t => t !== '')
@@ -101,7 +103,7 @@ const ProductManagement: React.FC = () => {
 
       setShowModal(false);
       setEditingId(null);
-      setFormData({ name: '', price: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' });
+      setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' });
       fetchProducts();
     } catch (err: any) {
       alert(err.code === 'permission-denied' ? 'Permission Denied. Check Firestore Rules.' : 'Error saving product');
@@ -113,6 +115,7 @@ const ProductManagement: React.FC = () => {
     setFormData({
       name: p.name,
       price: p.price.toString(),
+      discountedPrice: p.discountedPrice ? p.discountedPrice.toString() : '',
       category: p.category,
       description: p.description,
       stock: p.stock.toString(),
@@ -147,7 +150,7 @@ const ProductManagement: React.FC = () => {
           <p className="text-zinc-500">Add, edit, or remove products from the storefront.</p>
         </div>
         <button
-          onClick={() => { setShowModal(true); setEditingId(null); setFormData({ name: '', price: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' }); }}
+          onClick={() => { setShowModal(true); setEditingId(null); setFormData({ name: '', price: '', discountedPrice: '', category: '', description: '', stock: '', imageUrls: [''], sizes: ['S', 'M', 'L', 'XL'], tags: '' }); }}
           className="bg-green-500 text-black px-6 py-3 rounded-xl font-black flex items-center gap-2 hover:bg-green-400 transition-all uppercase tracking-widest text-sm"
         >
           <Plus size={20} /> Add New Product
@@ -210,7 +213,16 @@ const ProductManagement: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4"><span className="text-[10px] font-black bg-zinc-800 px-2 py-1 rounded text-zinc-400 uppercase">{product.category}</span></td>
-                  <td className="px-6 py-4 font-mono font-bold text-sm text-green-500">${product.price.toFixed(2)}</td>
+                  <td className="px-6 py-4">
+                    {product.discountedPrice ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono font-bold text-sm text-green-500">${product.discountedPrice.toFixed(2)}</span>
+                        <span className="font-mono text-xs text-zinc-600 line-through">${product.price.toFixed(2)}</span>
+                      </div>
+                    ) : (
+                      <span className="font-mono font-bold text-sm text-green-500">${product.price.toFixed(2)}</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${product.stock > 10 ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -262,6 +274,11 @@ const ProductManagement: React.FC = () => {
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase">Price ($)</label>
                   <input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500" required />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase">Discounted Price (Optional)</label>
+                  <input type="number" step="0.01" value={formData.discountedPrice} onChange={(e) => setFormData({ ...formData, discountedPrice: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500" placeholder="Leave empty for no discount" />
+                  <p className="text-[10px] text-zinc-500 italic">If set, this price will be shown instead of regular price</p>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase">Stock</label>
