@@ -17,6 +17,8 @@ const OrderDetail: React.FC = () => {
    const [loading, setLoading] = useState(true);
    const [updating, setUpdating] = useState(false);
    const [isTrackingModalOpen, setIsTrackingModalOpen] = useState(false);
+   const [isRiderModalOpen, setIsRiderModalOpen] = useState(false);
+   const [riderData, setRiderData] = useState({ name: '', vehicleNumber: '', phone: '', trackingUrl: '' });
 
    const fetchOrder = async () => {
       if (!id) return;
@@ -56,6 +58,28 @@ const OrderDetail: React.FC = () => {
          await fetchOrder();
       } catch (err) {
          alert("Cancellation failed.");
+      } finally {
+         setUpdating(false);
+      }
+   };
+
+   const handleAssignRider = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!id || !riderData.name || !riderData.vehicleNumber) return;
+      setUpdating(true);
+      try {
+         const docRef = doc(db, 'orders', id);
+         await updateDoc(docRef, {
+            status: 'Shipped',
+            riderDetails: {
+               ...riderData,
+               assignedAt: new Date()
+            }
+         });
+         setIsRiderModalOpen(false);
+         await fetchOrder();
+      } catch (err) {
+         alert("Mission assignment failed.");
       } finally {
          setUpdating(false);
       }
@@ -153,6 +177,30 @@ const OrderDetail: React.FC = () => {
                            </button>
                         ))}
                      </div>
+                  </div>
+               )}
+
+               {/* Rider Assignment Panel (Admin Only) */}
+               {isAdmin && (order.status === 'Processing' || order.status === 'Shipped') && (
+                  <div className="p-8 bg-zinc-900/50 border border-zinc-800 rounded-[32px] space-y-6 animate-in slide-in-from-left-4">
+                     <div className="flex justify-between items-center">
+                        <h4 className="font-black italic uppercase tracking-tighter flex items-center gap-2 text-zinc-300">
+                           <Truck size={18} className="text-blue-500" /> Logistics Assignment
+                        </h4>
+                        <button
+                           onClick={() => setIsRiderModalOpen(true)}
+                           className="text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition-colors"
+                        >
+                           {order.riderDetails ? 'Update Rider' : 'Assign Rider'}
+                        </button>
+                     </div>
+                     {order.riderDetails && (
+                        <div className="bg-black/40 p-4 rounded-xl space-y-2 border border-blue-500/20">
+                           <p className="text-xs font-bold text-zinc-400 uppercase">Current Operative:</p>
+                           <p className="text-sm font-black text-white">{order.riderDetails.name}</p>
+                           <p className="text-xs font-mono text-blue-500">{order.riderDetails.vehicleNumber}</p>
+                        </div>
+                     )}
                   </div>
                )}
 
@@ -256,7 +304,7 @@ const OrderDetail: React.FC = () => {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-black uppercase tracking-tight text-white">In Transit</p>
-                           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Global Hub &rarr; Local Node</p>
+                           <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Global Hub &rarr; Local Node</p>
                            <p className="text-[10px] text-blue-500 font-black mt-2">EST. ARRIVAL: 48H</p>
                         </div>
                      </div>
@@ -267,7 +315,7 @@ const OrderDetail: React.FC = () => {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-black uppercase tracking-tight">Departed Distribution Center</p>
-                           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sector 7-G Intelligence Node</p>
+                           <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Sector 7-G Intelligence Node</p>
                            <p className="text-[10px] text-zinc-600 italic mt-1">Processed: {new Date(order.createdAt.seconds * 1000 + 86400000).toLocaleDateString()}</p>
                         </div>
                      </div>
@@ -278,11 +326,39 @@ const OrderDetail: React.FC = () => {
                         </div>
                         <div className="text-left">
                            <p className="text-sm font-black uppercase tracking-tight">Mission Initialized</p>
-                           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Order Verified & Packed</p>
+                           <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest">Order Verified & Packed</p>
                            <p className="text-[10px] text-zinc-600 italic mt-1">Logged: {order.createdAt.toDate().toLocaleString()}</p>
                         </div>
                      </div>
                   </div>
+
+                  {/* Rider Information for User */}
+                  {order.riderDetails && (
+                     <div className="mt-8 p-6 bg-blue-500/10 border border-blue-500/20 rounded-3xl animate-in fade-in slide-in-from-bottom-4 relative z-20">
+                        <h4 className="text-xs font-black uppercase tracking-widest text-blue-400 mb-4 flex items-center gap-2">
+                           <ShieldAlert size={14} /> Assigned Operative
+                        </h4>
+                        <div className="flex items-center gap-6">
+                           <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-black font-black text-lg">
+                              {order.riderDetails.name.charAt(0)}
+                           </div>
+                           <div className="space-y-1">
+                              <p className="font-black text-lg text-white uppercase">{order.riderDetails.name}</p>
+                              <p className="text-xs font-mono text-zinc-400 uppercase tracking-wider">Vehicle: <span className="text-white">{order.riderDetails.vehicleNumber}</span></p>
+                           </div>
+                        </div>
+                        {order.riderDetails.trackingUrl && (
+                           <a
+                              href={order.riderDetails.trackingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-6 w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                           >
+                              <MapPin size={14} /> View Live Location
+                           </a>
+                        )}
+                     </div>
+                  )}
 
                   <div className="mt-12 pt-8 border-t border-zinc-800/50 flex items-center justify-between">
                      <div className="flex items-center gap-3">
@@ -296,6 +372,56 @@ const OrderDetail: React.FC = () => {
                         Close Feed
                      </button>
                   </div>
+               </div>
+            </div>
+         )}
+
+         {/* Rider Assignment Modal */}
+         {isRiderModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+               <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsRiderModalOpen(false)}></div>
+               <div className="relative bg-zinc-900 border border-zinc-800 w-full max-w-md rounded-3xl p-8 shadow-2xl animate-in zoom-in-95">
+                  <button onClick={() => setIsRiderModalOpen(false)} className="absolute top-6 right-6 p-2 text-zinc-500 hover:text-white"><X size={24} /></button>
+                  <h2 className="text-2xl font-black italic tracking-tighter uppercase mb-2">Assign Operative</h2>
+                  <p className="text-xs text-zinc-500 font-medium mb-6">Dispatch external logistics unit.</p>
+
+                  <form onSubmit={handleAssignRider} className="space-y-4">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest">Rider Name</label>
+                        <input
+                           type="text"
+                           value={riderData.name}
+                           onChange={(e) => setRiderData({ ...riderData, name: e.target.value })}
+                           className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                           placeholder="e.g. John Doe"
+                           required
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest">Vehicle Info</label>
+                        <input
+                           type="text"
+                           value={riderData.vehicleNumber}
+                           onChange={(e) => setRiderData({ ...riderData, vehicleNumber: e.target.value })}
+                           className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                           placeholder="e.g. Bike - KHI 1234"
+                           required
+                        />
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-zinc-600 tracking-widest">Live Location URL</label>
+                        <input
+                           type="url"
+                           value={riderData.trackingUrl}
+                           onChange={(e) => setRiderData({ ...riderData, trackingUrl: e.target.value })}
+                           className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-blue-500"
+                           placeholder="https://maps.google.com/..."
+                        />
+                     </div>
+                     <button type="submit" className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-500 transition-all uppercase tracking-widest mt-4">
+                        Confirm Assignment
+                     </button>
+                  </form>
                </div>
             </div>
          )}

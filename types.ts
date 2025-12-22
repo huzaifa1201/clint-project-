@@ -44,6 +44,7 @@ export interface Product {
   colorVariants?: ColorVariant[]; // Added for color-specific images
   tags?: string[];
   isPublished?: boolean;
+  createdAt?: any;
 }
 
 export interface Review {
@@ -79,6 +80,13 @@ export interface Order {
   phoneNumber?: string;
   transactionId?: string; // For local payment methods
   localPaymentMethod?: string; // Name of local payment (e.g., EasyPaisa)
+  riderDetails?: {
+    name: string;
+    vehicleNumber: string;
+    phone?: string;
+    trackingUrl?: string; // Live location link
+    assignedAt: any;
+  };
 }
 
 export interface Banner {

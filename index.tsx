@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import './src/i18n';
 import App from './App.tsx';
 import './index.css';
 

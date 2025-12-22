@@ -1,12 +1,16 @@
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon, Home as HomeIcon, Store, Mail } from 'lucide-react';
+import { ShoppingBag, User, LogOut, Menu, X, ShieldCheck, Heart, Sun, Moon, Home as HomeIcon, Store, Mail, ChevronDown, Layers } from 'lucide-react';
+import { collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useCart } from '../context/CartContext.tsx';
 import { useWishlist } from '../context/WishlistContext.tsx';
 import { useTheme } from '../context/ThemeContext.tsx';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { Category } from '../types';
+import LanguageSelector from './LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
   const { user, profile, isAdmin } = useAuth();
@@ -14,7 +18,19 @@ const Navbar: React.FC = () => {
   const { wishlist } = useWishlist();
   const { theme, toggleTheme } = useTheme();
   const [isOpen, setIsOpen] = React.useState(false);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  React.useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'categories'));
+        setCategories(snap.docs.map(d => ({ id: d.id, ...d.data() } as Category)));
+      } catch (e) { console.error("Nav cat error", e); }
+    };
+    fetchCats();
+  }, []);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -36,9 +52,30 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Home</Link>
-            <Link to="/products" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Shop</Link>
-            <Link to="/contact" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">Contact</Link>
+            <Link to="/" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">{t('home')}</Link>
+            <Link to="/products" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">{t('shop')}</Link>
+
+            {/* Dynamic Collection Dropdown */}
+            {categories.length > 0 && (
+              <div className="relative group">
+                <button className="flex items-center gap-1 text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest py-4">
+                  {t('collections')} <ChevronDown size={14} />
+                </button>
+                <div className="absolute top-full left-0 w-48 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl p-2 hidden group-hover:block animate-in fade-in slide-in-from-top-2">
+                  {categories.map(cat => (
+                    <Link
+                      key={cat.id}
+                      to={`/products?category=${encodeURIComponent(cat.name)}`}
+                      className="block px-4 py-3 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 text-xs font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300 hover:text-green-500 transition-colors"
+                    >
+                      {cat.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Link to="/contact" className="text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors text-xs font-black uppercase tracking-widest">{t('contact')}</Link>
             {isAdmin && (
               <Link to="/admin" className="flex items-center gap-1 text-green-500 font-black text-xs uppercase tracking-widest">
                 <ShieldCheck size={18} /> Admin
@@ -48,6 +85,7 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Right Side Icons */}
           <div className="hidden md:flex items-center gap-2">
+            <LanguageSelector />
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
@@ -130,13 +168,31 @@ const Navbar: React.FC = () => {
 
             {/* Navigation Links */}
             <Link to="/" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
-              <HomeIcon size={18} /> Home
+              <HomeIcon size={18} /> {t('home')}
             </Link>
             <Link to="/products" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
-              <Store size={18} /> Shop
+              <Store size={18} /> {t('shop')}
             </Link>
+
+            {/* Mobile Categories */}
+            {categories.length > 0 && (
+              <div className="py-2 space-y-2 border-l-2 border-zinc-200 dark:border-zinc-800 ml-2 pl-4">
+                <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-1 flex items-center gap-2"><Layers size={12} /> {t('collections')}</p>
+                {categories.map(cat => (
+                  <Link
+                    key={cat.id}
+                    to={`/products?category=${encodeURIComponent(cat.name)}`}
+                    onClick={() => setIsOpen(false)}
+                    className="block text-zinc-500 dark:text-zinc-500 hover:text-green-500 text-xs font-bold uppercase tracking-wider py-1"
+                  >
+                    {cat.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+
             <Link to="/contact" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
-              <Mail size={18} /> Contact
+              <Mail size={18} /> {t('contact')}
             </Link>
             <Link to="/wishlist" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2 relative" onClick={() => setIsOpen(false)}>
               <Heart size={18} /> Wishlist
@@ -145,7 +201,7 @@ const Navbar: React.FC = () => {
               )}
             </Link>
             <Link to="/cart" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2 relative" onClick={() => setIsOpen(false)}>
-              <ShoppingBag size={18} /> Cart
+              <ShoppingBag size={18} /> {t('cart')}
               {cartCount > 0 && (
                 <span className="ml-auto bg-green-500 text-black text-[10px] font-black px-2 py-0.5 rounded-full">{cartCount}</span>
               )}
@@ -155,6 +211,10 @@ const Navbar: React.FC = () => {
             {user ? (
               <>
                 <div className="border-t border-zinc-200 dark:border-zinc-800 pt-4 mt-4">
+                  <div className="mb-4">
+                    <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest mb-2 px-2">Language</p>
+                    <LanguageSelector />
+                  </div>
                   <Link to="/profile" className="flex items-center gap-3 text-zinc-500 font-black uppercase tracking-widest text-xs py-2" onClick={() => setIsOpen(false)}>
                     <User size={18} /> Profile ({profile?.name})
                   </Link>

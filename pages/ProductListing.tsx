@@ -12,7 +12,7 @@ const ProductListing: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const categoryFilter = searchParams.get('cat');
+  const categoryFilter = searchParams.get('category');
   const tagFilter = searchParams.get('tag');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('newest');

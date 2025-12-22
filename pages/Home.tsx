@@ -7,8 +7,10 @@ import { Product, Banner } from '../types';
 import { ChevronRight, ArrowRight, Zap, Shield, Truck, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { formatPrice } from '../utils/currency';
+import { useTranslation } from 'react-i18next';
 
 const Home: React.FC = () => {
+  const { t } = useTranslation();
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [promoAds, setPromoAds] = useState<any[]>([]);
@@ -22,7 +24,7 @@ const Home: React.FC = () => {
       try {
         // Fetch all data in parallel for maximum speed
         const [productsSnap, bannersSnap, configSnap] = await Promise.all([
-          getDocs(query(collection(db, 'products'), limit(4))),
+          getDocs(query(collection(db, 'products'), limit(8))),
           getDocs(query(collection(db, 'banners'), limit(1))),
           getDoc(doc(db, 'site_config', 'general'))
         ]);
@@ -101,16 +103,17 @@ const Home: React.FC = () => {
         <div className="absolute inset-0 pointer-events-none opacity-10" style={{ backgroundImage: 'radial-gradient(#22c55e 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
       </section>
 
-      {/* Promotional Ads Section */}
+      {/* Promotional Ads Section - Auto Scrolling */}
       {promoAds.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 space-y-8">
-          {promoAds.map((ad, idx) => (
-            <a key={idx} href={ad.linkUrl || '#'} className="block relative w-full aspect-[21/9] md:aspect-[32/9] rounded-[32px] overflow-hidden group border border-zinc-200 dark:border-zinc-800 hover:border-green-500/50 transition-all shadow-2xl">
-
-              <img src={ad.imageUrl} alt="Promo" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </a>
-          ))}
+        <section className="w-full overflow-hidden">
+          <div className="flex gap-8 animate-scroll whitespace-nowrap px-4 hover:pause-animation">
+            {[...promoAds, ...promoAds].map((ad, idx) => ( // Duplicate for seamless loop
+              <a key={idx} href={ad.linkUrl || '#'} className="inline-block relative w-[300px] md:w-[600px] shrink-0 aspect-[21/9] md:aspect-[32/9] rounded-[32px] overflow-hidden group border border-zinc-200 dark:border-zinc-800 hover:border-green-500/50 transition-all shadow-xl">
+                <img src={ad.imageUrl} alt="Promo" className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700" loading="lazy" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </a>
+            ))}
+          </div>
         </section>
       )}
 
@@ -131,49 +134,54 @@ const Home: React.FC = () => {
         ))}
       </section>
 
-      {/* Featured Drops */}
-      <section className="max-w-7xl mx-auto px-4">
+      {/* Featured Drops - Auto Horizontal Scroll */}
+      <section className="max-w-7xl mx-auto px-4 overflow-hidden">
         <div className="flex justify-between items-end mb-16">
           <div className="text-left">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tighter italic uppercase leading-none">New Drops</h2>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tighter italic uppercase leading-none">{t('newArrivals')}</h2>
             <div className="w-24 h-2 bg-green-500 mt-4"></div>
           </div>
           <Link to="/products" className="text-green-500 font-black hover:underline flex items-center gap-2 text-xs uppercase tracking-[0.2em]">
-            EXPLORE ARCHIVE <ArrowRight size={18} />
+            {t('explore')} <ArrowRight size={18} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-          {featuredProducts.map(product => (
-            <Link key={product.id} to={`/products/${product.id}`} className="group space-y-6 text-left">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[32px] bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
+        <div className="relative">
+          <div className="flex gap-10 animate-scroll-slow px-2 hover:pause-animation">
+            {[...featuredProducts, ...featuredProducts].map((product, idx) => ( // Duplication for loop
+              <Link key={`${product.id}-${idx}`} to={`/products/${product.id}`} className="group space-y-2 text-left min-w-[130px] md:min-w-[180px] shrink-0">
+                <div className="relative aspect-square overflow-hidden rounded-[20px] bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-md group-hover:shadow-xl">
 
-                <img
-                  src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80 group-hover:opacity-100"
-                  loading="lazy"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                {product.stock === 0 && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <span className="bg-red-500 text-white font-black px-6 py-2 rounded-full text-[10px] tracking-widest uppercase -rotate-12">OUT OF STOCK</span>
-                  </div>
-                )}
-              </div>
-              <div>
-                <h3 className="font-black text-xl text-zinc-800 dark:text-zinc-200 group-hover:text-green-500 transition-colors uppercase tracking-tight">{product.name}</h3>
-                {product.discountedPrice ? (
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-green-500 font-mono font-bold text-lg">{formatPrice(product.discountedPrice, currency)}</p>
-                    <p className="text-zinc-500 font-mono text-sm line-through">{formatPrice(product.price, currency)}</p>
-                  </div>
-                ) : (
-                  <p className="text-green-500 font-mono font-bold text-lg mt-1">{formatPrice(product.price, currency)}</p>
-                )}
-              </div>
-            </Link>
-          ))}
+                  <img
+                    src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
+                    alt={product.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  {product.stock === 0 && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <span className="bg-red-500 text-white font-black px-3 py-1.5 rounded-full text-[9px] tracking-widest uppercase -rotate-12">No Stock</span>
+                    </div>
+                  )}
+                </div>
+                <div className="px-1">
+                  <h3 className="font-extrabold text-xs md:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-green-500 transition-colors uppercase tracking-tight truncate leading-tight">{product.name}</h3>
+                  {product.discountedPrice ? (
+                    <div className="flex flex-col gap-0.5 mt-1">
+                      <p className="text-green-500 font-mono font-bold text-xs md:text-sm">{formatPrice(product.discountedPrice, currency)}</p>
+                      <p className="text-zinc-400 font-mono text-[10px] line-through">{formatPrice(product.price, currency)}</p>
+                    </div>
+                  ) : (
+                    <p className="text-green-500 font-mono font-bold text-xs md:text-sm mt-1">{formatPrice(product.price, currency)}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Fallback msg if empty */}
+          {featuredProducts.length === 0 && <p className="text-center text-zinc-500 py-10 italic">No drops available.</p>}
         </div>
       </section>
     </div>

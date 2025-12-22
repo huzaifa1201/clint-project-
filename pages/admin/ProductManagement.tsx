@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { Product } from '../../types';
+import { Product, Category } from '../../types';
 import { Plus, Edit, Trash2, Search, X, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Hash, Palette } from 'lucide-react';
 
 type SortField = 'price' | 'stock' | null;
@@ -10,6 +10,7 @@ type SortOrder = 'asc' | 'desc';
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -50,7 +51,14 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, []);
+  useEffect(() => {
+    fetchProducts();
+    const fetchCategories = async () => {
+      const snap = await getDocs(collection(db, 'categories'));
+      setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)));
+    };
+    fetchCategories();
+  }, []);
 
   const handleSort = (field: 'price' | 'stock') => {
     if (sortField === field) {
@@ -278,7 +286,17 @@ const ProductManagement: React.FC = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase">Category</label>
-                  <input type="text" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500" required />
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 appearance-none"
+                    required
+                  >
+                    <option value="">Select Category</option>
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.name}>{cat.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-zinc-500 uppercase">Price ($)</label>
