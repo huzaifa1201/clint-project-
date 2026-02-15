@@ -147,15 +147,14 @@ const Home: React.FC = () => {
         </div>
 
         <div className="relative">
-          <div className="flex gap-10 animate-scroll-slow px-2 hover:pause-animation">
-            {[...featuredProducts, ...featuredProducts].map((product, idx) => ( // Duplication for loop
-              <Link key={`${product.id}-${idx}`} to={`/products/${product.id}`} className="group space-y-2 text-left min-w-[130px] md:min-w-[180px] shrink-0">
-                <div className="relative aspect-square overflow-hidden rounded-[20px] bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-md group-hover:shadow-xl">
-
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-10">
+            {featuredProducts.map((product) => (
+              <Link key={product.id} to={`/products/${product.id}`} className="group space-y-3 text-left">
+                <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 group-hover:border-green-500 transition-all duration-500 shadow-md group-hover:shadow-xl">
                   <img
                     src={product.imageUrls[0] || 'https://picsum.photos/600/800'}
                     alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-90 group-hover:opacity-100"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-white/80 dark:from-zinc-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -165,16 +164,21 @@ const Home: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className="px-1">
-                  <h3 className="font-extrabold text-xs md:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-green-500 transition-colors uppercase tracking-tight truncate leading-tight">{product.name}</h3>
-                  {product.discountedPrice ? (
-                    <div className="flex flex-col gap-0.5 mt-1">
-                      <p className="text-green-500 font-mono font-bold text-xs md:text-sm">{formatPrice(product.discountedPrice, currency)}</p>
-                      <p className="text-zinc-400 font-mono text-[10px] line-through">{formatPrice(product.price, currency)}</p>
-                    </div>
-                  ) : (
-                    <p className="text-green-500 font-mono font-bold text-xs md:text-sm mt-1">{formatPrice(product.price, currency)}</p>
-                  )}
+                <div className="px-1 space-y-1.5">
+                  <div className="flex justify-between items-start gap-2">
+                    <h3 className="font-black text-xs md:text-sm text-zinc-900 dark:text-zinc-100 group-hover:text-green-500 transition-colors uppercase tracking-tight leading-tight truncate">{product.name}</h3>
+                  </div>
+                  <div className="flex flex-col">
+                    {product.discountedPrice ? (
+                      <div className="flex items-center gap-2">
+                        <p className="text-green-500 font-mono font-bold text-xs md:text-sm">{formatPrice(product.discountedPrice, currency)}</p>
+                        <p className="text-zinc-400 font-mono text-[10px] line-through">{formatPrice(product.price, currency)}</p>
+                      </div>
+                    ) : (
+                      <p className="text-green-500 font-mono font-bold text-xs md:text-sm">{formatPrice(product.price, currency)}</p>
+                    )}
+                    <p className="text-zinc-500 dark:text-zinc-600 text-[10px] font-black uppercase tracking-widest mt-0.5">{product.category}</p>
+                  </div>
                 </div>
               </Link>
             ))}
